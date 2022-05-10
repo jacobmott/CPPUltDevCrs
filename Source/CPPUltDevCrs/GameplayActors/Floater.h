@@ -36,6 +36,13 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FloaterVariables")
   FVector InitialDirection;
 
+  UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "FloaterVariables")
+  FVector InitialForce;
+
+
+  UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "FloaterVariables")
+  FVector InitialTorque;
+  
   //
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FloaterVariables")
   bool bShouldFloat;
@@ -43,6 +50,20 @@ public:
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "FloaterVariables")
   bool bInitializedFloaterLocations;
+
+private:
+  float RunningTime;
+
+
+
+  UPROPERTY(EditAnywhere, Category = "FloaterVariables | Wave Parameters")
+  float A;
+  UPROPERTY(EditAnywhere, Category = "FloaterVariables | Wave Parameters")
+  float B;
+  UPROPERTY(EditAnywhere, Category = "FloaterVariables | Wave Parameters")
+  float C;
+
+
 
 protected:
 	// Called when the game starts or when spawned
