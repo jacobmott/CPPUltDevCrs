@@ -11,8 +11,8 @@ AFloater::AFloater()
 	PrimaryActorTick.bCanEverTick = true;
 
   StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Custom Static Mesh"));
-  RootComponent = StaticMeshComponent;
-
+  //RootComponent = StaticMeshComponent;
+  SetRootComponent(StaticMeshComponent);
   InitialLocation = FVector(0.0f);
   PlacedLocation = FVector(0.0f);
   WorldOrigin = FVector(0.0f, 0.0f, 0.0f);
