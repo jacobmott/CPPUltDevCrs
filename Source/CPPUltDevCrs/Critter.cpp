@@ -2,7 +2,7 @@
 
 
 #include "Critter.h"
-#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
@@ -14,15 +14,17 @@ ACritter::ACritter()
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-  StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	StaticMeshComponent->SetupAttachment(RootComponent);
+  SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
+  SkeletalMeshComponent->SetupAttachment(RootComponent);
 
   CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(GetRootComponent());
   CameraComponent->SetRelativeLocation(FVector(-300.0f, 0.0f, 300.0f));
 	CameraComponent->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
   //SetRootComponent(StaticMeshComponent);
-  AutoPossessPlayer = EAutoReceiveInput::Player0;
+ 
+  //We dont possess this, its a monster/critter
+  //AutoPossessPlayer = EAutoReceiveInput::Player0;
 
 
   CurrentVelocity = FVector(0.0f, 0.0f, 0.0f);

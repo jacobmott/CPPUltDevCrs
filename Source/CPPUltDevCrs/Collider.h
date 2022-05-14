@@ -10,6 +10,7 @@ class UStaticMeshComponent;
 class USphereComponent;
 class USpringArmComponent;
 class UCameraComponent;
+class UColliderMovementComponent;
 
 UCLASS()
 class CPPULTDEVCRS_API ACollider : public APawn
@@ -66,6 +67,12 @@ public:
   FORCEINLINE void SetSpringArmComponent(USpringArmComponent* SpringArmComp) {
     SpringArmComponent = SpringArmComp;
   }
+
+
+  UPROPERTY(VisibleAnywhere, Category = "Mesh")
+  TObjectPtr<UColliderMovementComponent> OurMovementComponent;
+
+  virtual UPawnMovementComponent* GetMovementComponent() const override;
 
   //UPROPERTY(EditAnywhere, Category = "PawnMovement")
   //float MaxSpeed;

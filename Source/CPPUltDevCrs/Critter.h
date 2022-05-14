@@ -6,7 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "Critter.generated.h"
 
-class UStaticMeshComponent;
+class USkeletalMeshComponent;
 class UCameraComponent;
 
 UCLASS()
@@ -30,8 +30,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+  //This has a skeleton and that skeleton moves and morphs the mesh
   UPROPERTY(EditAnywhere, Category = "Mesh")
-  TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
+  TObjectPtr<USkeletalMeshComponent> SkeletalMeshComponent;
 
   UPROPERTY(EditAnywhere)
   TObjectPtr<UCameraComponent> CameraComponent;

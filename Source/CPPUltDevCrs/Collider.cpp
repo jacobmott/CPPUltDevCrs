@@ -11,6 +11,8 @@
 
 #include "GameFramework/SpringArmComponent.h"
 
+#include "ColliderMovementComponent.h"
+
 #include "UObject/ConstructorHelpers.h"
 
 // Sets default values
@@ -19,9 +21,10 @@ ACollider::ACollider()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-  RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+  //RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
   SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
-  SphereComponent->SetupAttachment(GetRootComponent());
+  RootComponent = SphereComponent;
+  //SphereComponent->SetupAttachment(GetRootComponent());
   SphereComponent->InitSphereRadius(40.0f);
   SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
 
@@ -35,8 +38,6 @@ ACollider::ACollider()
   }
 
 
-
-
   SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
   SpringArmComponent->SetupAttachment(GetRootComponent());
   SpringArmComponent->SetRelativeRotation(FRotator(-45.0f, 0.0f, 0.0f));
@@ -46,6 +47,12 @@ ACollider::ACollider()
 
   CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
   CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
+
+  OurMovementComponent = CreateDefaultSubobject<UColliderMovementComponent>(TEXT("MovementComponent"));
+  OurMovementComponent->UpdatedComponent = RootComponent;
+
+
+
 
   AutoPossessPlayer = EAutoReceiveInput::Player0;
 
@@ -70,15 +77,25 @@ void ACollider::MoveForward(float Value)
 {
 
   FVector Forward = GetActorForwardVector();
-  AddMovementInput(Forward, Value);
+  if (OurMovementComponent)
+  {
+    OurMovementComponent->AddInputVector(Forward * Value);
+  }
+
+
+
 }
 
 void ACollider::MoveRight(float Value)
 {
 
-
   FVector Right = GetActorRightVector();
-  AddMovementInput(Right, Value);
+  if (OurMovementComponent)
+  {
+    OurMovementComponent->AddInputVector(Right * Value);
+  }
+
+
 }
 
 
@@ -90,5 +107,10 @@ void ACollider::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
   PlayerInputComponent->BindAxis("MoveForward", this, &ACollider::MoveForward);
   PlayerInputComponent->BindAxis("MoveRight", this, &ACollider::MoveRight);
 
+}
+
+UPawnMovementComponent* ACollider::GetMovementComponent() const
+{
+  return OurMovementComponent;
 }
 
