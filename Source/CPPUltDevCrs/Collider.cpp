@@ -8,7 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SphereComponent.h"
-
+#include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
 #include "ColliderMovementComponent.h"
