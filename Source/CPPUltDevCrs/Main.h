@@ -46,6 +46,33 @@ public:
   float BaseLookUpAtRate;
 
 
+
+
+  /**
+  /* 
+  /*
+  /*Player Stats
+  /*
+  */
+
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "PlayerStats")
+  float MaxHealth;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerStats")
+  float Health; 
+
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "PlayerStats")
+  float MaxStamina;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerStats")
+  float Stamina;
+
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerStats")
+  int32 Coins;
+
+
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

@@ -7,6 +7,10 @@
 #include "Item.generated.h"
 
 class USphereComponent;
+class UStaticMeshComponent;
+class UParticleSystemComponent;
+class UParticleSystem;
+class USoundCue;
 
 UCLASS()
 class CPPULTDEVCRS_API AItem : public AActor
@@ -21,6 +25,24 @@ public:
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | Collision")
   TObjectPtr<USphereComponent> CollisionVolume;
 
+  /* Base mesh component */
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | Mesh")
+  TObjectPtr<UStaticMeshComponent> StaticMeshComponent;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Particles")
+  TObjectPtr<UParticleSystemComponent> IdleParticlesComponent;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Particles")
+  TObjectPtr<UParticleSystem> OverlapParticles;
+  
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Sounds")
+  TObjectPtr<USoundCue> OverlapSound;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Properties")
+  bool bRotate;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Properties")
+  float RotationRate;
 
 protected:
 	// Called when the game starts or when spawned

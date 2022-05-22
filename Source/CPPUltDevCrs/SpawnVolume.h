@@ -24,6 +24,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawning")
   TSubclassOf<class ACritter> PawnToSpawn;
 
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
