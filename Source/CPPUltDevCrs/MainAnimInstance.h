@@ -7,6 +7,7 @@
 #include "MainAnimInstance.generated.h"
 
 class APawn;
+class AMain;
 
 /**
  * 
@@ -32,5 +33,6 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
   TObjectPtr<APawn> Pawn; 
 
-
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+  TObjectPtr<AMain> Main;
 };

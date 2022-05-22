@@ -3,7 +3,7 @@
 
 #include "MainAnimInstance.h"
 #include "GameFramework/PawnMovementComponent.h"
-
+#include "Main.h"
 
 
 
@@ -13,8 +13,17 @@ void UMainAnimInstance::NativeInitializeAnimation()
     Pawn = TryGetPawnOwner();
   }
 
-  
+  if (!Pawn) {
+    return;
+  }
 
+  if (!Main) {
+    Main = Cast<AMain>(Pawn);
+  }
+
+  if (!Main) {
+    return;
+  }
 
 }
 
@@ -23,9 +32,16 @@ void UMainAnimInstance::UpdateAnimationProperties()
   if (!Pawn) {
     Pawn = TryGetPawnOwner();
   }
-  
 
   if (!Pawn) {
+    return;
+  }
+
+  if (!Main) {
+    Main = Cast<AMain>(Pawn);
+  }
+
+  if (!Main) {
     return;
   }
 
@@ -38,6 +54,6 @@ void UMainAnimInstance::UpdateAnimationProperties()
 
   bIsInAir = Pawn->GetMovementComponent()->IsFalling();
 
-
+  
 
 }

@@ -9,6 +9,29 @@
 class USpringArmComponent;
 class UCameraComponent;
 
+
+UENUM(BlueprintType)
+enum class EMovementStatus : uint8 {
+ 
+ EMS_Normal UMETA( DisplayName = "Normal" ),
+ EMS_Sprinting UMETA(DisplayName = "Sprinting"),
+
+ EMS_MAX UMETA(DisplayName = "DefaultMAX")
+
+};
+
+UENUM(BlueprintType)
+enum class EStaminaStatus : uint8 {
+
+  ESS_Normal UMETA(DisplayName = "Normal"),
+  ESS_BelowMinimum UMETA(DisplayName = "BelowMinimum"),
+  ESS_Exhausted UMETA(DisplayName = "Exhausted"),
+  ESS_ExhaustedRecovering UMETA(DisplayName = "ExhaustedRecovering"),
+
+  ESS_MAX UMETA(DisplayName = "DefaultMAX")
+
+};
+
 UCLASS()
 class CPPULTDEVCRS_API AMain : public ACharacter
 {
@@ -17,6 +40,37 @@ class CPPULTDEVCRS_API AMain : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AMain();
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Enums")
+  EStaminaStatus StaminaStatus;
+  FORCEINLINE void SetStaminaStatus(EStaminaStatus Status) {
+    StaminaStatus = Status;
+  }
+
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+  float StaminaDrainRate;
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+  float MinSprintStamina;
+
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Enums")
+  EMovementStatus MovementStatus;
+
+  /** Set Movement status and running speed */
+  void SetMovementStatus(EMovementStatus Status);
+
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Running")
+  float RunningSpeed;
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Running")
+  float SprintingSpeed;
+
+  bool bShiftKeyDown;
+  
+  /** Pressed down to enable sprinting */
+  void ShiftKeyDown();
+
+  /** Released to stop sprinting */
+  void ShiftKeyUp();
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
   TObjectPtr<UCameraComponent> CameraComponent;
@@ -46,8 +100,6 @@ public:
   float BaseLookUpAtRate;
 
 
-
-
   /**
   /* 
   /*
@@ -67,9 +119,19 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerStats")
   float Stamina;
 
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerStats")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerStats")
   int32 Coins;
 
+
+
+
+
+
+  void DecrementHealth(float Amount);
+
+  void Die();
+
+  void IncrementCoins(int32 Amount);
 
 
 
