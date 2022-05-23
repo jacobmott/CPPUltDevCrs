@@ -7,6 +7,9 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+
+#include "Kismet/KismetSystemLibrary.h"
+
 // Sets default values
 AMain::AMain()
 {
@@ -68,6 +71,20 @@ AMain::AMain()
   StaminaDrainRate = 25.0f;
   MinSprintStamina = 50.0f;
 
+
+
+}
+
+void AMain::ShowPickupLocations()
+{
+  //for (int32 i = 0; i < PickupLocations.Num(); i++) {
+  //  UKismetSystemLibrary::DrawDebugSphere(this, PickupLocations[i], 25.0f, 8, FLinearColor::Green, 10.0f, 0.5f);
+  //}
+
+  for (FVector Location : PickupLocations) {
+    UKismetSystemLibrary::DrawDebugSphere(this, Location, 25.0f, 8, FLinearColor::Green, 10.0f, 0.5f);
+  }
+
 }
 
 void AMain::SetMovementStatus(EMovementStatus Status)
@@ -116,7 +133,8 @@ void AMain::IncrementCoins(int32 Amount)
 void AMain::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+  
 }
 
 // Called every frame

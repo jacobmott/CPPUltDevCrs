@@ -24,7 +24,7 @@ void APickup::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AA
   }
 
   Main->IncrementCoins(CountCount);
-
+  Main->PickupLocations.Add(GetActorLocation());
 
 }
 
