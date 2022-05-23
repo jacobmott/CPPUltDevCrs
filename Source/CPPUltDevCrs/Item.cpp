@@ -40,8 +40,6 @@ void AItem::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AAct
 {
   UE_LOG(LogTemp, Warning, TEXT("AItem: Overlap Begin"));
 
-  //For item pickups.. destory the actor/item once we've overlapped with it
-  Destroy();
 
   if (!OverlapParticles) {
     return;

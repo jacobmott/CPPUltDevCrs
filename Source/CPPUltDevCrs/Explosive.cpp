@@ -14,6 +14,8 @@ void AExplosive::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class
   Super::OnOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
   UE_LOG(LogTemp, Warning, TEXT("AExplosive: Overlap Begin"));
 
+
+
   if (!OtherActor) {
     return;
   }
@@ -24,9 +26,9 @@ void AExplosive::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class
   }
 
   Main->DecrementHealth(Damage);
-  
-  
 
+  //For item pickups.. destroy the actor/item once we've overlapped with it
+  Destroy();
 }
 
 void AExplosive::OnOverlapEnd(class UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)

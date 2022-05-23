@@ -14,6 +14,7 @@ void APickup::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AA
   Super::OnOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
   UE_LOG(LogTemp, Warning, TEXT("APickup: Overlap Begin"));
 
+
   if (!OtherActor) {
     return;
   }
@@ -26,6 +27,8 @@ void APickup::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AA
   Main->IncrementCoins(CountCount);
   Main->PickupLocations.Add(GetActorLocation());
 
+  //For item pickups.. destroy the actor/item once we've overlapped with it
+  Destroy();
 }
 
 void APickup::OnOverlapEnd(class UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
