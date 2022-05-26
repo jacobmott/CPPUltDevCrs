@@ -10,6 +10,8 @@
 
 #include "Kismet/KismetSystemLibrary.h"
 
+#include "Weapon.h"
+
 // Sets default values
 AMain::AMain()
 {
@@ -63,7 +65,7 @@ AMain::AMain()
   RunningSpeed = 650.0f;
   SprintingSpeed = 950.0f;
   bShiftKeyDown = false;
-
+  bLMBDown = false;
 
   MovementStatus = EMovementStatus::EMS_Normal;
   StaminaStatus = EStaminaStatus::ESS_Normal;
@@ -107,6 +109,16 @@ void AMain::ShiftKeyDown()
 void AMain::ShiftKeyUp()
 {
   bShiftKeyDown = false;
+}
+
+void AMain::SetEquippedWeapon(AWeapon* Weapon)
+{
+
+  if (EquippedWeapon) {
+    EquippedWeapon->Destroy();
+  }
+
+  EquippedWeapon = Weapon;
 }
 
 void AMain::DecrementHealth(float Amount)
@@ -224,8 +236,26 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
   PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMain::ShiftKeyDown);
   PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMain::ShiftKeyUp);
 
+  PlayerInputComponent->BindAction("LMB", IE_Pressed, this, &AMain::LMBDown);
+  PlayerInputComponent->BindAction("LMB", IE_Released, this, &AMain::LMBUp);
+
 }
 
+
+void AMain::LMBDown()
+{
+  bLMBDown = true;
+  if (!ActiveOverlappingItem){ return; }
+  AWeapon* Weapon = Cast<AWeapon>(ActiveOverlappingItem); 
+  if (!Weapon){ return; }
+  Weapon->Equip(this);
+}
+
+void AMain::LMBUp()
+{
+  bLMBDown = false;
+  SetActiveOverlappingItem(nullptr);
+}
 
 
 void AMain::MoveForward(float Value)

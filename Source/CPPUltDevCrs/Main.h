@@ -9,6 +9,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class AWeapon;
+class AItem;
 
 UENUM(BlueprintType)
 enum class EMovementStatus : uint8 {
@@ -80,10 +81,16 @@ public:
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items")
   TObjectPtr<AWeapon> EquippedWeapon;
-  FORCEINLINE void SetEquippedWeapon(AWeapon* Weapon) {
-    EquippedWeapon = Weapon;
+  void SetEquippedWeapon(AWeapon* Weapon);
+  FORCEINLINE AWeapon* GetEquippedWeapon() {
+    return EquippedWeapon;
   }
 
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Items")
+  TObjectPtr<AItem> ActiveOverlappingItem;
+  FORCEINLINE void SetActiveOverlappingItem(AItem* Item) {
+    ActiveOverlappingItem = Item;
+  }
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
   TObjectPtr<UCameraComponent> CameraComponent;
@@ -175,8 +182,14 @@ public:
   void LookUpAtRate(float Rate);
 
 
-
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+  bool bLMBDown;
+  void LMBDown();
+  void LMBUp();
+
+
+
 
 };

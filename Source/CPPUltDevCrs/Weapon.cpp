@@ -5,6 +5,11 @@
 #include "Main.h"
 #include "Engine/SkeletalMeshSocket.h"
 
+#include "Sound/SoundCue.h"
+#include "Kismet/GameplayStatics.h"
+
+#include "Particles/ParticleSystemComponent.h"
+
 AWeapon::AWeapon()
 {
   SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
@@ -25,8 +30,9 @@ AWeapon::AWeapon()
     //Mesh->SetCanEverAffectNavigation(false);
   }
 
+  bWeaponParticles = false;
 
-
+  WeaponState = EWeaponState::EWS_Pickup;
 
 }
 
@@ -35,11 +41,17 @@ void AWeapon::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AA
   Super::OnOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
   UE_LOG(LogTemp, Warning, TEXT("AWeapon: Overlap Begin"));
 
+  if ( WeaponState != EWeaponState::EWS_Pickup ){ return; }
   if (!OtherActor){ return; }
 
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main){ return; }
-  Equip(Main);
+
+
+  Main->SetActiveOverlappingItem(this);
+
+
+  //Equip(Main);
 
 }
 
@@ -47,6 +59,13 @@ void AWeapon::OnOverlapEnd(class UPrimitiveComponent* OverlappedComponent, AActo
 {
   Super::OnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
   UE_LOG(LogTemp, Warning, TEXT("AWeapon: Overlap End"));
+
+  if (!OtherActor) { return; }
+
+  AMain* Main = Cast<AMain>(OtherActor);
+  if (!Main) { return; }
+
+  Main->SetActiveOverlappingItem(nullptr);
 }
 
 
@@ -61,6 +80,16 @@ void AWeapon::Equip(AMain* Char)
   if (!RightHandSocket){ return; }
   RightHandSocket->AttachActor(this, Char->GetMesh());
 
+
+  Char->SetEquippedWeapon(this);
+  Char->SetActiveOverlappingItem(nullptr);
+
   bRotate = false;
+  if (OnEquipSound){
+    UGameplayStatics::PlaySound2D(this, OnEquipSound);
+  }
+  if (!bWeaponParticles) {
+    IdleParticlesComponent->Deactivate();
+  }
 
 }
