@@ -7,6 +7,8 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+#include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -16,7 +18,7 @@
 AMain::AMain()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.bCanEverTick = true;
 
   SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
   SpringArmComponent->SetupAttachment(GetRootComponent());
@@ -109,6 +111,41 @@ void AMain::ShiftKeyDown()
 void AMain::ShiftKeyUp()
 {
   bShiftKeyDown = false;
+}
+
+void AMain::Attack()
+{
+
+  if (bAttacking){ return; }
+  bAttacking = true;
+
+  UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+  if (AnimInstance && CombatMontage) {
+    int32 Section = FMath::RandRange(0,1);
+    switch (Section)
+    { 
+    case 0:
+      AnimInstance->Montage_Play(CombatMontage, 2.2f);
+      AnimInstance->Montage_JumpToSection(FName("Attack_1"), CombatMontage);
+      break;
+    case 1:
+      AnimInstance->Montage_Play(CombatMontage, 1.8f);
+      AnimInstance->Montage_JumpToSection(FName("Attack_2"), CombatMontage);
+      break;
+    default:
+      break;
+    }
+
+  }
+
+}
+
+void AMain::AttackEnd()
+{
+  bAttacking = false;
+  if (bLMBDown) {
+    Attack();
+  }
 }
 
 void AMain::SetEquippedWeapon(AWeapon* Weapon)
@@ -245,10 +282,14 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AMain::LMBDown()
 {
   bLMBDown = true;
-  if (!ActiveOverlappingItem){ return; }
-  AWeapon* Weapon = Cast<AWeapon>(ActiveOverlappingItem); 
-  if (!Weapon){ return; }
-  Weapon->Equip(this);
+  if (ActiveOverlappingItem){ 
+    AWeapon* Weapon = Cast<AWeapon>(ActiveOverlappingItem); 
+    if (!Weapon){ return; }
+    Weapon->Equip(this);
+  }
+  else if (EquippedWeapon) {
+    Attack();
+  }
 }
 
 void AMain::LMBUp()
@@ -260,7 +301,7 @@ void AMain::LMBUp()
 
 void AMain::MoveForward(float Value)
 {
-  if (Controller == nullptr  || Value == 0.0f){
+  if (Controller == nullptr  || Value == 0.0f || bAttacking){
     return;
   }
 
@@ -276,7 +317,7 @@ void AMain::MoveForward(float Value)
 void AMain::MoveRight(float Value)
 {
 
-  if (Controller == nullptr || Value == 0.0f) {
+  if (Controller == nullptr || Value == 0.0f || bAttacking) {
     return;
   }
 

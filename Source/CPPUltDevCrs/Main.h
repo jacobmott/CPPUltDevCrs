@@ -10,6 +10,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class AWeapon;
 class AItem;
+class UAnimMontage;
 
 UENUM(BlueprintType)
 enum class EMovementStatus : uint8 {
@@ -78,6 +79,16 @@ public:
   /** Released to stop sprinting */
   void ShiftKeyUp();
 
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anims")
+  bool bAttacking;
+
+  void Attack();
+
+  UFUNCTION(BlueprintCallable)
+  void AttackEnd();
+
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anims")
+  TObjectPtr<UAnimMontage> CombatMontage;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items")
   TObjectPtr<AWeapon> EquippedWeapon;
