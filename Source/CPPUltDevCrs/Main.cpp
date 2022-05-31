@@ -11,8 +11,10 @@
 #include "Animation/AnimInstance.h"
 
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Weapon.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 AMain::AMain()
@@ -136,6 +138,10 @@ void AMain::Attack()
       break;
     }
 
+    //if (!EquippedWeapon) { return; }
+    //if (!EquippedWeapon->SwingSound) { return; }
+    //UGameplayStatics::PlaySound2D(this, EquippedWeapon->SwingSound);
+
   }
 
 }
@@ -146,6 +152,13 @@ void AMain::AttackEnd()
   if (bLMBDown) {
     Attack();
   }
+}
+
+void AMain::PlaySwingSound()
+{
+  if (!EquippedWeapon) { return; }
+  if (!EquippedWeapon->SwingSound) { return; }
+  UGameplayStatics::PlaySound2D(this, EquippedWeapon->SwingSound);
 }
 
 void AMain::SetEquippedWeapon(AWeapon* Weapon)

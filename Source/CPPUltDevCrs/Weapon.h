@@ -10,7 +10,7 @@
 class USkeletalMeshComponent;
 class AMain;
 class USoundCue;
-
+class UBoxComponent;
 
 
 UENUM(BlueprintType)
@@ -50,8 +50,17 @@ public:
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Item | SkeletalMesh")
   TObjectPtr<USkeletalMeshComponent> SkeletalMeshComponent;
 
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item | Combat")
+  TObjectPtr<UBoxComponent> CombatCollision;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Combat")
+  float Damage;
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Sounds")
   TObjectPtr<USoundCue> OnEquipSound;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Sounds")
+  TObjectPtr<USoundCue> SwingSound;
 
   virtual void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
     const FHitResult& SweepResult) override;
@@ -59,12 +68,28 @@ public:
   virtual void OnOverlapEnd(class UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
     int32 OtherBodyIndex) override;
 
+  UFUNCTION()
+  void CombatOnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+    const FHitResult& SweepResult);
+
+  UFUNCTION()
+  void CombatOnOverlapEnd(class UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+    int32 OtherBodyIndex);
+
   void Equip(AMain* Char);
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item | Particles")
   bool bWeaponParticles;
 
+  UFUNCTION(BlueprintCallable)
+  void ActivateCollision();
 
+  UFUNCTION(BlueprintCallable)
+  void DeactivateCollision();
+
+protected:
+  // Called when the game starts or when spawned
+  virtual void BeginPlay() override;
 
 
 };

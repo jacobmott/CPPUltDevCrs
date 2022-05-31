@@ -11,6 +11,8 @@ class UCameraComponent;
 class AWeapon;
 class AItem;
 class UAnimMontage;
+class UParticleSystem;
+class USoundCue;
 
 UENUM(BlueprintType)
 enum class EMovementStatus : uint8 {
@@ -79,6 +81,13 @@ public:
   /** Released to stop sprinting */
   void ShiftKeyUp();
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  TObjectPtr<USoundCue> HitSound;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  TObjectPtr<UParticleSystem> HitParticles;
+
+
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anims")
   bool bAttacking;
 
@@ -89,6 +98,9 @@ public:
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anims")
   TObjectPtr<UAnimMontage> CombatMontage;
+
+  UFUNCTION(BlueprintCallable)
+  void PlaySwingSound();
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Items")
   TObjectPtr<AWeapon> EquippedWeapon;
@@ -152,9 +164,6 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerStats")
   int32 Coins;
-
-
-
 
 
 

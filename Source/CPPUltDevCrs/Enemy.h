@@ -10,6 +10,12 @@
 class USphereComponent;
 class AAIController;
 class AMain;
+class UParticleSystem;
+class USoundCue;
+class UBoxComponent;
+class UAnimMontage;
+
+
 
 UENUM(BlueprintType)
 enum class EEnemyMovementStatus : uint8 {
@@ -47,6 +53,28 @@ public:
   /* Base shape collision */
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
   TObjectPtr<USphereComponent> CombatSphere;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+  float Health;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+  float MaxHealth;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+  float Damage;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+  TObjectPtr<UParticleSystem> HitParticles;
+
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+  TObjectPtr<USoundCue> HitSound;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+  TObjectPtr<USoundCue> SwingSound;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+  TObjectPtr<UBoxComponent> CombatCollision;
 
 protected:
 	// Called when the game starts or when spawned
@@ -86,7 +114,33 @@ public:
 
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI")
   TObjectPtr<AMain> CombatTarget;
+
+  UFUNCTION(BlueprintCallable)
+  void AttackEnd();
+
+  void Attack();
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+  bool bAttacking;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  TObjectPtr<UAnimMontage> CombatMontage;
+
+  UFUNCTION()
+  void CombatOnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+    const FHitResult& SweepResult);
+
+  UFUNCTION()
+  void CombatOnOverlapEnd(class UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+    int32 OtherBodyIndex);
   
+
+
+  UFUNCTION(BlueprintCallable)
+  void ActivateCollision();
+
+  UFUNCTION(BlueprintCallable)
+  void DeactivateCollision();
 
 
 };

@@ -10,6 +10,12 @@
 
 #include "Particles/ParticleSystemComponent.h"
 
+#include "Components/BoxComponent.h"
+
+#include "Enemy.h"
+
+#include "Engine/SkeletalMeshSocket.h"
+
 AWeapon::AWeapon()
 {
   SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
@@ -30,9 +36,18 @@ AWeapon::AWeapon()
     //Mesh->SetCanEverAffectNavigation(false);
   }
 
-  bWeaponParticles = false;
+  CombatCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("CombatCollision"));
+  CombatCollision->SetupAttachment(GetRootComponent());
+  CombatCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+  CombatCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+  CombatCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+  CombatCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Overlap);
+  //CombatCollision->MoveIgnoreActors.Add(this);
 
+  bWeaponParticles = false;
   WeaponState = EWeaponState::EWS_Pickup;
+
+  Damage = 25.0f;
 
 }
 
@@ -69,6 +84,33 @@ void AWeapon::OnOverlapEnd(class UPrimitiveComponent* OverlappedComponent, AActo
 }
 
 
+void AWeapon::CombatOnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+  if (!OtherActor){ return; }
+  
+  AEnemy* Enemy = Cast<AEnemy>(OtherActor);
+  if (!Enemy) { return; }
+
+  if (Enemy->HitParticles) {
+    const USkeletalMeshSocket* WeaponSocket = SkeletalMeshComponent->GetSocketByName("WeaponSocket");
+    if (!WeaponSocket) { return; }
+    FVector SocketLocation = WeaponSocket->GetSocketLocation(SkeletalMeshComponent);
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Enemy->HitParticles, SocketLocation, FRotator(0.0f), false);
+  }
+  
+  if (Enemy->HitSound) {
+    UGameplayStatics::PlaySound2D(this, Enemy->HitSound);
+  }
+
+
+}
+
+
+void AWeapon::CombatOnOverlapEnd(class UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+
+}
+
 void AWeapon::Equip(AMain* Char)
 {
   if (!Char){ return; }
@@ -92,4 +134,23 @@ void AWeapon::Equip(AMain* Char)
     IdleParticlesComponent->Deactivate();
   }
 
+}
+
+void AWeapon::ActivateCollision()
+{ 
+  CombatCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+  //if (!SwingSound) { return; }
+  //UGameplayStatics::PlaySound2D(this, SwingSound);
+}
+
+void AWeapon::DeactivateCollision()
+{
+  CombatCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void AWeapon::BeginPlay()
+{
+  Super::BeginPlay();
+  CombatCollision->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::CombatOnOverlapBegin);
+  CombatCollision->OnComponentEndOverlap.AddDynamic(this, &AWeapon::CombatOnOverlapEnd);
 }
