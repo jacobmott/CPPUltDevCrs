@@ -12,9 +12,12 @@
 
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include "Weapon.h"
 #include "Sound/SoundCue.h"
+
+#include "Enemy.h"
 
 // Sets default values
 AMain::AMain()
@@ -93,6 +96,19 @@ void AMain::ShowPickupLocations()
 
 }
 
+void AMain::SetInterpToEnemy(bool Interp)
+{
+  bInterpToEnemy = Interp;
+}
+
+FRotator AMain::GetLookAtRotationYaw(FVector Target)
+{
+
+  FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Target);
+  FRotator LookAtRotationYaw(0.0f, LookAtRotation.Yaw, 0.0f);
+  return LookAtRotationYaw;
+}
+
 void AMain::SetMovementStatus(EMovementStatus Status)
 {
   MovementStatus = Status;
@@ -120,6 +136,7 @@ void AMain::Attack()
 
   if (bAttacking){ return; }
   bAttacking = true;
+  SetInterpToEnemy(true);
 
   UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
   if (AnimInstance && CombatMontage) {
@@ -149,6 +166,7 @@ void AMain::Attack()
 void AMain::AttackEnd()
 {
   bAttacking = false;
+  SetInterpToEnemy(false);
   if (bLMBDown) {
     Attack();
   }
@@ -183,12 +201,25 @@ void AMain::DecrementHealth(float Amount)
 
 void AMain::Die()
 {
-  
+  UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+  if (AnimInstance && CombatMontage) {
+    AnimInstance->Montage_Play(CombatMontage, 1.0f);
+    AnimInstance->Montage_JumpToSection(FName("Death"), CombatMontage);
+  }
+
+  GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 }
 
 void AMain::IncrementCoins(int32 Amount)
 {
   Coins += Amount;
+}
+
+float AMain::TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+  DecrementHealth(DamageAmout);
+  return DamageAmout;
 }
 
 // Called when the game starts or when spawned
@@ -262,6 +293,13 @@ void AMain::Tick(float DeltaTime)
   default:
     break;
   }
+
+  if (bInterpToEnemy && CombatTarget) {
+    FRotator LookAtYaw = GetLookAtRotationYaw(CombatTarget->GetActorLocation());
+    FRotator InterpRotation = FMath::RInterpTo(GetActorRotation(), LookAtYaw, DeltaTime, InterpSpeed);\
+    SetActorRotation(InterpRotation);
+  }
+
 
 }
 

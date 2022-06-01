@@ -87,6 +87,15 @@ public:
   UFUNCTION(BlueprintCallable)
   void DeactivateCollision();
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  TSubclassOf<UDamageType> DamageTypeClass;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+  TObjectPtr<AController> WeaponInstigator;
+  FORCEINLINE void SetInstigator(AController* Inst) {
+    WeaponInstigator = Inst;
+  }
+
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;

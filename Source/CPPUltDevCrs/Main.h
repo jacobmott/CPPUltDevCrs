@@ -13,6 +13,7 @@ class AItem;
 class UAnimMontage;
 class UParticleSystem;
 class USoundCue;
+class AEnemy;
 
 UENUM(BlueprintType)
 enum class EMovementStatus : uint8 {
@@ -61,6 +62,18 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
   float MinSprintStamina;
 
+
+  float InterpSpeed;
+  bool bInterpToEnemy;
+  void SetInterpToEnemy(bool Interp);
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+  TObjectPtr<AEnemy> CombatTarget;
+  FORCEINLINE void SetCombatTarget(AEnemy* Target) {
+    CombatTarget = Target;
+  }
+
+  FRotator GetLookAtRotationYaw(FVector Target);
 
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Enums")
   EMovementStatus MovementStatus;
@@ -143,6 +156,7 @@ public:
   float BaseLookUpAtRate;
 
 
+
   /**
   /* 
   /*
@@ -173,6 +187,7 @@ public:
 
   void IncrementCoins(int32 Amount);
 
+  virtual float TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 
 protected:

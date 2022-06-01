@@ -23,6 +23,7 @@ enum class EEnemyMovementStatus : uint8 {
   EMS_Idle UMETA(DisplayName = "Idle"),
   EMS_MoveToTarget UMETA(DisplayName = "MoveToTarget"),
   EMS_Attacking UMETA(DisplayName = "Attacking"),
+  EMS_Dead UMETA(DisplayName = "Dead"),
 
   EMS_MAX UMETA(DisplayName = "DefaultMAX")
 
@@ -43,6 +44,9 @@ public:
 	FORCEINLINE void SetEnemyMovementStatus(EEnemyMovementStatus Status) {
     EnemyMovementStatus = Status;
 	}
+  FORCEINLINE EEnemyMovementStatus GetEnemyMovementStatus() {
+    return EnemyMovementStatus;
+  }
 
 
   /* Base shape collision */
@@ -66,6 +70,13 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
   TObjectPtr<UParticleSystem> HitParticles;
 
+  virtual float TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+  void Die();
+
+  UFUNCTION(BlueprintCallable)
+  void DeathEnd();
+
+  bool Alive();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
   TObjectPtr<USoundCue> HitSound;
@@ -125,6 +136,24 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
   TObjectPtr<UAnimMontage> CombatMontage;
+
+  FTimerHandle AttackTimer;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  float AttackMinTime;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  float AttackMaxTime;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  TSubclassOf<UDamageType> DamageTypeClass; 
+
+
+  FTimerHandle DeathTimer;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  float DeathDelay;
+
+
+  void Dissappear();
 
   UFUNCTION()
   void CombatOnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
