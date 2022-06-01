@@ -14,6 +14,7 @@ class UAnimMontage;
 class UParticleSystem;
 class USoundCue;
 class AEnemy;
+class AMainPlayerController;
 
 UENUM(BlueprintType)
 enum class EMovementStatus : uint8 {
@@ -72,6 +73,17 @@ public:
   FORCEINLINE void SetCombatTarget(AEnemy* Target) {
     CombatTarget = Target;
   }
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+  bool bHasCombatTarget;
+  FORCEINLINE void SetHasCombatTarget(bool HasTarget) {
+    bHasCombatTarget = HasTarget;
+  }
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
+  FVector CombatTargetLocation;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Controller")
+  TObjectPtr<AMainPlayerController> MainPlayerController;
 
   FRotator GetLookAtRotationYaw(FVector Target);
 

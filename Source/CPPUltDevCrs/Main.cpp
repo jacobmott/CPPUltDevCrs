@@ -19,6 +19,8 @@
 
 #include "Enemy.h"
 
+#include "MainPlayerController.h"
+
 // Sets default values
 AMain::AMain()
 {
@@ -79,6 +81,8 @@ AMain::AMain()
 
   StaminaDrainRate = 25.0f;
   MinSprintStamina = 50.0f;
+
+  bHasCombatTarget = false;
 
 
 
@@ -226,7 +230,7 @@ float AMain::TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEven
 void AMain::BeginPlay()
 {
 	Super::BeginPlay();
-
+  MainPlayerController = Cast<AMainPlayerController>(GetController());
   
 }
 
@@ -298,6 +302,13 @@ void AMain::Tick(float DeltaTime)
     FRotator LookAtYaw = GetLookAtRotationYaw(CombatTarget->GetActorLocation());
     FRotator InterpRotation = FMath::RInterpTo(GetActorRotation(), LookAtYaw, DeltaTime, InterpSpeed);\
     SetActorRotation(InterpRotation);
+  }
+
+  if (CombatTarget) {
+    CombatTargetLocation = CombatTarget->GetActorLocation();
+    if (MainPlayerController){
+      MainPlayerController->EnemyLocation = CombatTargetLocation;
+    }
   }
 
 

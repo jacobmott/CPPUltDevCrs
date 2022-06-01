@@ -26,6 +26,8 @@
 
 #include "Components/CapsuleComponent.h"
 
+#include "MainPlayerController.h"
+
 // Sets default values
 AEnemy::AEnemy()
 {
@@ -192,9 +194,16 @@ void AEnemy::AgroSphereOnOverlapEnd(class UPrimitiveComponent* OverlappedCompone
 
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main) { return; }
-
+  if (Main->MainPlayerController) {
+    Main->MainPlayerController->RemoveEnemyHealthBar();
+  }
+  if (Main->CombatTarget == this) {
+    Main->SetCombatTarget(nullptr);
+    Main->SetHasCombatTarget(false);
+  }
   SetEnemyMovementStatus(EEnemyMovementStatus::EMS_Idle);
   AIController->StopMovement();
+
 
   //GetWorldTimerManager().SetTimer(SwitchHandle, this, &AFloorSwitch::CloseDoor, SwitchTime);
 }
@@ -216,7 +225,10 @@ void AEnemy::CombatSphereOnOverlapBegin(class UPrimitiveComponent* OverlappedCom
   CombatTarget = Main;
   bOverlappingCombatSphere = true;
   Main->SetCombatTarget(this);
-
+  Main->SetHasCombatTarget(true);
+  if (Main->MainPlayerController) {
+    Main->MainPlayerController->DisplayEnemyHealthBar();
+  }
   Attack();
 
   //if (!OverlapParticles) {
@@ -243,9 +255,7 @@ void AEnemy::CombatSphereOnOverlapEnd(class UPrimitiveComponent* OverlappedCompo
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main) { return; }
   bOverlappingCombatSphere = false;
-  if (Main->CombatTarget == this){
-    Main->SetCombatTarget(nullptr);
-  }
+
   GetWorldTimerManager().ClearTimer(AttackTimer);
 
 
