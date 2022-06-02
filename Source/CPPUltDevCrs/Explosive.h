@@ -18,6 +18,8 @@ public:
 
   AExplosive();
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  TSubclassOf<UDamageType> DamageTypeClass;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
   float Damage;

@@ -3,6 +3,11 @@
 
 #include "Explosive.h"
 #include "Main.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Engine/World.h"
+#include "Sound/SoundCue.h"
+#include "Enemy.h"
 
 AExplosive::AExplosive()
 {
@@ -21,11 +26,28 @@ void AExplosive::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class
   }
 
   AMain* Main = Cast<AMain>(OtherActor);
-  if (!Main) {
+  AEnemy* Enemy = Cast<AEnemy>(OtherActor);
+  if (!Main && !Enemy) {
     return;
   }
 
-  Main->DecrementHealth(Damage);
+  if (DamageTypeClass) {
+    UGameplayStatics::ApplyDamage(OtherActor, Damage, nullptr, this, DamageTypeClass);
+  }
+
+  //Main->DecrementHealth(Damage);
+
+  if (!OverlapParticles) {
+    return;
+  }
+  UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), OverlapParticles, GetActorLocation(), FRotator(0.0f), true);
+
+  if (!OverlapSound) {
+    return;
+  }
+  UGameplayStatics::PlaySound2D(this, OverlapSound);
+
+
 
   //For item pickups.. destroy the actor/item once we've overlapped with it
   Destroy();

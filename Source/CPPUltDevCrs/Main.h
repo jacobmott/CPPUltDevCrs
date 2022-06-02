@@ -21,6 +21,7 @@ enum class EMovementStatus : uint8 {
  
  EMS_Normal UMETA( DisplayName = "Normal" ),
  EMS_Sprinting UMETA(DisplayName = "Sprinting"),
+ EMS_Dead UMETA(DisplayName = "Dead"),
 
  EMS_MAX UMETA(DisplayName = "DefaultMAX")
 
@@ -217,6 +218,9 @@ public:
   //Called for right and left input
   void MoveRight(float Value);
 
+  bool bMovingForward;
+  bool bMovingRight;
+
   /* Called via input to turn at a specific rate
   *  @param Rate This is a normalized rate, i.e. 1.0 means 100% of desired turn rate  
   */
@@ -236,7 +240,10 @@ public:
   void LMBDown();
   void LMBUp();
 
+  UFUNCTION(BlueprintCallable)
+  void DeathEnd();
 
+  virtual void Jump() override;
 
 
 };

@@ -38,6 +38,8 @@ AEnemy::AEnemy()
   AgroSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
   AgroSphere->SetupAttachment(GetRootComponent());
   AgroSphere->InitSphereRadius(600.0f);
+  AgroSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECR_Ignore);
+
 
   CombatSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CombatSphere"));
   CombatSphere->SetupAttachment(GetRootComponent());
@@ -49,7 +51,8 @@ AEnemy::AEnemy()
   //CombatSphere->MoveIgnoreActors.Add(this);
 
   CombatCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("CombatCollision"));
-  CombatCollision->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, FName("EnemySocket"));
+  //CombatCollision->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, FName("EnemySocket"));
+  CombatCollision->SetupAttachment(GetMesh(), FName("EnemySocket"));
   CombatCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
   CombatCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
   CombatCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
@@ -74,6 +77,7 @@ AEnemy::AEnemy()
   EnemyMovementStatus = EEnemyMovementStatus::EMS_Idle;
 
   DeathDelay = 3.0f;
+  bHasValidTarget = false;
 
 }
 
@@ -200,6 +204,7 @@ void AEnemy::AgroSphereOnOverlapEnd(class UPrimitiveComponent* OverlappedCompone
   if (Main->CombatTarget == this) {
     Main->SetCombatTarget(nullptr);
     Main->SetHasCombatTarget(false);
+    bHasValidTarget = false;
   }
   SetEnemyMovementStatus(EEnemyMovementStatus::EMS_Idle);
   AIController->StopMovement();
@@ -222,6 +227,7 @@ void AEnemy::CombatSphereOnOverlapBegin(class UPrimitiveComponent* OverlappedCom
 
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main) { return; }
+  bHasValidTarget = true;
   CombatTarget = Main;
   bOverlappingCombatSphere = true;
   Main->SetCombatTarget(this);
@@ -229,7 +235,9 @@ void AEnemy::CombatSphereOnOverlapBegin(class UPrimitiveComponent* OverlappedCom
   if (Main->MainPlayerController) {
     Main->MainPlayerController->DisplayEnemyHealthBar();
   }
-  Attack();
+  float AttackTime = FMath::FRandRange(AttackMinTime, AttackMaxTime);
+  GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::Attack, AttackTime);
+  //Attack();
 
   //if (!OverlapParticles) {
   //  return;
@@ -256,14 +264,14 @@ void AEnemy::CombatSphereOnOverlapEnd(class UPrimitiveComponent* OverlappedCompo
   if (!Main) { return; }
   bOverlappingCombatSphere = false;
 
-  GetWorldTimerManager().ClearTimer(AttackTimer);
 
-
-  if (EnemyMovementStatus != EEnemyMovementStatus::EMS_Attacking) {
-    MoveToTarget(CombatTarget);
+  if (EnemyMovementStatus == EEnemyMovementStatus::EMS_Attacking ||
+    EnemyMovementStatus != EEnemyMovementStatus::EMS_Attacking) {
+    MoveToTarget(Main);
     CombatTarget = nullptr;
   }
 
+  GetWorldTimerManager().ClearTimer(AttackTimer);
   //SetEnemyMovementStatus(EEnemyMovementStatus::EMS_MoveToTarget);
   //MoveToTarget(Main);
 
@@ -314,6 +322,7 @@ void AEnemy::AttackEnd()
 void AEnemy::Attack()
 {
 
+  if (!bHasValidTarget){ return; }
   if (!Alive()) { return; }
   if (bAttacking) { return; }
   if (!AIController) { return; }

@@ -152,6 +152,8 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
   float DeathDelay;
 
+  bool bHasValidTarget;
+
 
   void Dissappear();
 

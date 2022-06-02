@@ -84,7 +84,8 @@ AMain::AMain()
 
   bHasCombatTarget = false;
 
-
+  bMovingForward = false;
+  bMovingRight = false;
 
 }
 
@@ -115,6 +116,9 @@ FRotator AMain::GetLookAtRotationYaw(FVector Target)
 
 void AMain::SetMovementStatus(EMovementStatus Status)
 {
+
+
+
   MovementStatus = Status;
   if (MovementStatus == EMovementStatus::EMS_Sprinting) {
     GetCharacterMovement()->MaxWalkSpeed = SprintingSpeed;
@@ -138,6 +142,7 @@ void AMain::ShiftKeyUp()
 void AMain::Attack()
 {
 
+  if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
   if (bAttacking){ return; }
   bAttacking = true;
   SetInterpToEnemy(true);
@@ -205,14 +210,35 @@ void AMain::DecrementHealth(float Amount)
 
 void AMain::Die()
 {
+  UE_LOG(LogTemp, Warning, TEXT("AMain: Die"));
+  if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
   UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
   if (AnimInstance && CombatMontage) {
     AnimInstance->Montage_Play(CombatMontage, 1.0f);
     AnimInstance->Montage_JumpToSection(FName("Death"), CombatMontage);
   }
+  UE_LOG(LogTemp, Warning, TEXT("AMain: Die SetMovementStatus(EMovementStatus::EMS_Dead)"));
+  SetMovementStatus(EMovementStatus::EMS_Dead);
+  
+  //DeathEnd();
+}
 
-  GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+void AMain::DeathEnd()
+{
 
+  UE_LOG(LogTemp, Warning, TEXT("AMain: DeathEnd"));
+  GetMesh()->bPauseAnims = true;
+  GetMesh()->bNoSkeletonUpdate = true;
+}
+
+
+void AMain::Jump()
+{
+  UE_LOG(LogTemp, Warning, TEXT("AMain: Jump"));
+  if (MovementStatus != EMovementStatus::EMS_Dead) {
+    UE_LOG(LogTemp, Warning, TEXT("AMain: Jump MovementStatus != EMovementStatus::EMS_Dead"));
+    Super::Jump();
+  }
 }
 
 void AMain::IncrementCoins(int32 Amount)
@@ -222,7 +248,17 @@ void AMain::IncrementCoins(int32 Amount)
 
 float AMain::TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-  DecrementHealth(DamageAmout);
+
+  Health -= DamageAmout;
+  if (Health <= 0.0f) {
+    Die();
+    AEnemy* Enemy = Cast<AEnemy>(DamageCauser);
+    if (Enemy) {
+      Enemy->bHasValidTarget = false;
+    }
+  }
+
+  //DecrementHealth(DamageAmout);
   return DamageAmout;
 }
 
@@ -238,7 +274,7 @@ void AMain::BeginPlay()
 void AMain::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+  if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
 
   float DeltaStamina = StaminaDrainRate * DeltaTime;
 
@@ -257,6 +293,7 @@ void AMain::Tick(float DeltaTime)
     if (Stamina <= MinSprintStamina){ 
       SetStaminaStatus(EStaminaStatus::ESS_BelowMinimum);
     }
+    if (!bMovingForward || !bMovingRight) { break; }
     SetMovementStatus(EMovementStatus::EMS_Sprinting);
     break;
   case EStaminaStatus::ESS_BelowMinimum:
@@ -274,6 +311,7 @@ void AMain::Tick(float DeltaTime)
       Stamina = 0.0f;
       SetMovementStatus(EMovementStatus::EMS_Normal);
     }
+    if (!bMovingForward || !bMovingRight) { break; }
     SetMovementStatus(EMovementStatus::EMS_Sprinting);
     break;
   case EStaminaStatus::ESS_Exhausted:
@@ -297,6 +335,7 @@ void AMain::Tick(float DeltaTime)
   default:
     break;
   }
+
 
   if (bInterpToEnemy && CombatTarget) {
     FRotator LookAtYaw = GetLookAtRotationYaw(CombatTarget->GetActorLocation());
@@ -328,7 +367,7 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
   PlayerInputComponent->BindAxis("TurnRate", this, &AMain::TurnAtRate);
   PlayerInputComponent->BindAxis("LookUpRate", this, &AMain::LookUpAtRate);
 
-  PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+  PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AMain::Jump);
   PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 
@@ -344,6 +383,7 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AMain::LMBDown()
 {
   bLMBDown = true;
+  if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
   if (ActiveOverlappingItem){ 
     AWeapon* Weapon = Cast<AWeapon>(ActiveOverlappingItem); 
     if (!Weapon){ return; }
@@ -361,11 +401,19 @@ void AMain::LMBUp()
 }
 
 
+
+
 void AMain::MoveForward(float Value)
 {
+  bMovingForward = false;
+
+  if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
+
   if (Controller == nullptr  || Value == 0.0f || bAttacking){
     return;
   }
+
+  bMovingForward = true;
 
   // Find out which way is forward
   const FRotator Rotation = Controller->GetControlRotation();
@@ -378,10 +426,15 @@ void AMain::MoveForward(float Value)
 
 void AMain::MoveRight(float Value)
 {
+  bMovingRight = false;
+
+  if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
 
   if (Controller == nullptr || Value == 0.0f || bAttacking) {
     return;
   }
+
+  bMovingRight = true;
 
   // Find out which way is forward
   const FRotator Rotation = Controller->GetControlRotation();
