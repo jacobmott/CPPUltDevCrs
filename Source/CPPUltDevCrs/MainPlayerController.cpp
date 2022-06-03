@@ -57,7 +57,7 @@ void AMainPlayerController::BeginPlay()
 void AMainPlayerController::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-  if (EnemyHealthBar) {
+  if (EnemyHealthBar && bEnemyHealthBarVisible) {
     FVector2D PositionInViewport;
     ProjectWorldLocationToScreen(EnemyLocation, PositionInViewport);
     PositionInViewport.Y -= 85.0f;

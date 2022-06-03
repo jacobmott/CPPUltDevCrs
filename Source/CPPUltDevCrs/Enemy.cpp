@@ -87,12 +87,12 @@ float AEnemy::TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEve
   Health -= DamageAmout;
   if (Health <= 0.0f) {
     Health = 0.0f;
-    Die();
+    Die(DamageCauser);
   }
   return DamageAmout;
 }
 
-void AEnemy::Die()
+void AEnemy::Die(AActor* Causer)
 {
   SetEnemyMovementStatus(EEnemyMovementStatus::EMS_Dead);
 
@@ -107,7 +107,11 @@ void AEnemy::Die()
   CombatSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
   GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-
+  if (!Causer){return;}
+  AMain* Main = Cast<AMain>(Causer);
+  if (!Main){return;}
+  Main->MainPlayerController->RemoveEnemyHealthBar();
+  Main->UpdateCombatTarget();
   
 }
 
@@ -138,6 +142,10 @@ void AEnemy::BeginPlay()
 
   CombatCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::CombatOnOverlapBegin);
   CombatCollision->OnComponentEndOverlap.AddDynamic(this, &AEnemy::CombatOnOverlapEnd);
+
+  //Dont make the camera zoom in when its in a weird spot where the enemies mesh is in between it and the player  
+  GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+  GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
 }
 
@@ -198,9 +206,10 @@ void AEnemy::AgroSphereOnOverlapEnd(class UPrimitiveComponent* OverlappedCompone
 
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main) { return; }
-  if (Main->MainPlayerController) {
-    Main->MainPlayerController->RemoveEnemyHealthBar();
-  }
+  //if (Main->MainPlayerController) {
+    //Main->MainPlayerController->RemoveEnemyHealthBar();
+  Main->UpdateCombatTarget();
+  //}
   if (Main->CombatTarget == this) {
     Main->SetCombatTarget(nullptr);
     Main->SetHasCombatTarget(false);
@@ -232,9 +241,10 @@ void AEnemy::CombatSphereOnOverlapBegin(class UPrimitiveComponent* OverlappedCom
   bOverlappingCombatSphere = true;
   Main->SetCombatTarget(this);
   Main->SetHasCombatTarget(true);
-  if (Main->MainPlayerController) {
-    Main->MainPlayerController->DisplayEnemyHealthBar();
-  }
+  //if (Main->MainPlayerController) {
+  //  Main->MainPlayerController->DisplayEnemyHealthBar();
+  //}
+  Main->UpdateCombatTarget();
   float AttackTime = FMath::FRandRange(AttackMinTime, AttackMaxTime);
   GetWorldTimerManager().SetTimer(AttackTimer, this, &AEnemy::Attack, AttackTime);
   //Attack();
@@ -257,6 +267,7 @@ void AEnemy::CombatSphereOnOverlapEnd(class UPrimitiveComponent* OverlappedCompo
   if (!Alive()) { return; }
   if (!OtherActor) { return; }
   if (OtherActor == this) { return; }
+  if (!OtherComp){ return; }
 
   UE_LOG(LogTemp, Warning, TEXT("AEnemy: CombatSphereOnOverlapEnd"));
 
@@ -265,11 +276,22 @@ void AEnemy::CombatSphereOnOverlapEnd(class UPrimitiveComponent* OverlappedCompo
   bOverlappingCombatSphere = false;
 
 
-  if (EnemyMovementStatus == EEnemyMovementStatus::EMS_Attacking ||
-    EnemyMovementStatus != EEnemyMovementStatus::EMS_Attacking) {
-    MoveToTarget(Main);
-    CombatTarget = nullptr;
+  //if (EnemyMovementStatus == EEnemyMovementStatus::EMS_Attacking ||
+  //  EnemyMovementStatus != EEnemyMovementStatus::EMS_Attacking) {
+  MoveToTarget(Main);
+  CombatTarget = nullptr;
+  if (Main->CombatTarget == this){
+    Main->SetCombatTarget(nullptr);
+    Main->bHasCombatTarget = false;
+    Main->UpdateCombatTarget();
   }
+  if (Main->MainPlayerController) {
+    USkeletalMeshComponent* MainMesh = Cast<USkeletalMeshComponent>(OtherComp);
+    if (MainMesh) {
+      Main->MainPlayerController->RemoveEnemyHealthBar();
+    }
+  }
+  //}
 
   GetWorldTimerManager().ClearTimer(AttackTimer);
   //SetEnemyMovementStatus(EEnemyMovementStatus::EMS_MoveToTarget);

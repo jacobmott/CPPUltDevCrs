@@ -80,6 +80,10 @@ public:
     bHasCombatTarget = HasTarget;
   }
 
+  void UpdateCombatTarget();
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+  TSubclassOf<AEnemy> EnemyFilter;
+
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat")
   FVector CombatTargetLocation;
 
@@ -198,7 +202,10 @@ public:
 
   void Die();
 
+  UFUNCTION(BlueprintCallable)
   void IncrementCoins(int32 Amount);
+  UFUNCTION(BlueprintCallable)
+  void IncrementHealth(float Amount);
 
   virtual float TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 

@@ -11,7 +11,7 @@
 
 APickup::APickup()
 {
-  CountCount = 1;
+  //CountCount = 1;
 }
 
 void APickup::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -28,8 +28,9 @@ void APickup::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AA
   if (!Main) {
     return;
   }
+  OnPickupBP(Main);
 
-  Main->IncrementCoins(CountCount);
+  //Main->IncrementCoins(CountCount);
   Main->PickupLocations.Add(GetActorLocation());
 
   if (!OverlapParticles) {

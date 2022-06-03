@@ -21,6 +21,9 @@
 
 #include "MainPlayerController.h"
 
+
+#include "Math/NumericLimits.h"
+
 // Sets default values
 AMain::AMain()
 {
@@ -104,6 +107,42 @@ void AMain::ShowPickupLocations()
 void AMain::SetInterpToEnemy(bool Interp)
 {
   bInterpToEnemy = Interp;
+}
+
+void AMain::UpdateCombatTarget()
+{
+
+  TArray<AActor*> OverlappingActors;
+  GetOverlappingActors(OverlappingActors, EnemyFilter);
+  if (OverlappingActors.Num() == 0) { 
+    if(!MainPlayerController){return;}
+    MainPlayerController->RemoveEnemyHealthBar();
+    return;
+  }
+  
+  AEnemy* ClosestEnemy = Cast<AEnemy>(OverlappingActors[0]);
+  if (!ClosestEnemy){ return; }
+  //Get dot product or magnitude (distance) 
+  FVector MyLocation = GetActorLocation();
+  float MinDistance = (ClosestEnemy->GetActorLocation() - MyLocation).Size();
+  //float MinDistance =  TNumericLimits<float>::Max();
+
+  for (auto Actor : OverlappingActors) {
+    AEnemy* Enemy = Cast<AEnemy>(Actor);
+    if (!Enemy){ continue; }
+    float DistanceToActor = (Enemy->GetActorLocation() - MyLocation).Size();
+    if (DistanceToActor < MinDistance) {
+      MinDistance = DistanceToActor;
+      ClosestEnemy = Enemy;
+    }
+  }
+
+  if (MainPlayerController){ 
+    MainPlayerController->DisplayEnemyHealthBar();
+  }
+  SetCombatTarget(ClosestEnemy);
+  bHasCombatTarget = true;
+  
 }
 
 FRotator AMain::GetLookAtRotationYaw(FVector Target)
@@ -244,6 +283,14 @@ void AMain::Jump()
 void AMain::IncrementCoins(int32 Amount)
 {
   Coins += Amount;
+}
+
+void AMain::IncrementHealth(float Amount)
+{
+  Health += Amount;
+  if (Health >= MaxHealth) {
+    Health = MaxHealth;
+  }
 }
 
 float AMain::TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
