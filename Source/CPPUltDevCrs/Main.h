@@ -15,6 +15,7 @@ class UParticleSystem;
 class USoundCue;
 class AEnemy;
 class AMainPlayerController;
+class AItemStorage;
 
 UENUM(BlueprintType)
 enum class EMovementStatus : uint8 {
@@ -209,6 +210,17 @@ public:
 
   virtual float TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+
+  void SwitchLevel(FName LevelName);
+
+  UFUNCTION(BlueprintCallable)
+  void SaveGame();
+  UFUNCTION(BlueprintCallable)
+  void LoadGame(bool SetPosition);
+
+  UPROPERTY(EditDefaultsOnly, Category = "SaveData")
+  TSubclassOf<AItemStorage> WeaponStorageClass;
+  
 
 protected:
 	// Called when the game starts or when spawned

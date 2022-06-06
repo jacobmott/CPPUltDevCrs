@@ -21,8 +21,11 @@
 
 #include "MainPlayerController.h"
 
-
 #include "Math/NumericLimits.h"
+
+#include "FirstSaveGame.h"
+
+#include "ItemStorage.h"
 
 // Sets default values
 AMain::AMain()
@@ -89,6 +92,8 @@ AMain::AMain()
 
   bMovingForward = false;
   bMovingRight = false;
+
+  
 
 }
 
@@ -307,6 +312,79 @@ float AMain::TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEven
 
   //DecrementHealth(DamageAmout);
   return DamageAmout;
+}
+
+void AMain::SwitchLevel(FName LevelName)
+{
+  UWorld* World = GetWorld();
+  if (!World){ return; }
+
+  FString CurrentLevel = World->GetMapName();
+
+  FName CurrentLevelName(*CurrentLevel);
+  if (CurrentLevelName == LevelName) { return; }
+
+  //if ( CurrentLevel.Equals(LevelName.ToString()) ){ return; }
+  
+  UGameplayStatics::OpenLevel(World, LevelName);
+  
+
+
+}
+
+void AMain::SaveGame()
+{
+  UFirstSaveGame* SaveGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::CreateSaveGameObject(UFirstSaveGame::StaticClass()));
+  
+  SaveGameInstance->CharacterStats.Health = Health;
+  SaveGameInstance->CharacterStats.MaxHealth = MaxHealth;
+  SaveGameInstance->CharacterStats.Stamina = Stamina;
+  SaveGameInstance->CharacterStats.MaxStamina = MaxStamina;
+  SaveGameInstance->CharacterStats.Coins = Coins;
+  SaveGameInstance->CharacterStats.Location = GetActorLocation();
+  SaveGameInstance->CharacterStats.Rotation = GetActorRotation();
+
+  if (EquippedWeapon){
+    SaveGameInstance->CharacterStats.WeaponName = EquippedWeapon->Name;
+  }
+
+  UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->PlayerName, SaveGameInstance->UserIndex);
+  
+
+}
+
+void AMain::LoadGame(bool SetPosition)
+{
+  UFirstSaveGame* LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::CreateSaveGameObject(UFirstSaveGame::StaticClass()));
+
+  LoadGameInstance  = Cast<UFirstSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->PlayerName, LoadGameInstance->UserIndex));
+
+  Health = LoadGameInstance->CharacterStats.Health;
+  MaxHealth = LoadGameInstance->CharacterStats.MaxHealth;
+  Stamina = LoadGameInstance->CharacterStats.Stamina;
+  MaxStamina = LoadGameInstance->CharacterStats.MaxStamina;
+  Coins = LoadGameInstance->CharacterStats.Coins;
+
+  if (SetPosition){
+    SetActorLocation(LoadGameInstance->CharacterStats.Location);
+    SetActorRotation(LoadGameInstance->CharacterStats.Rotation);
+  }
+
+  FString WeaponName = LoadGameInstance->CharacterStats.WeaponName;
+  if ( !WeaponName.Equals(TEXT("")) ) {
+    //EquippedWeapon = LoadGameInstance->CharacterStats.WeaponName;
+    if (WeaponStorageClass){
+      AItemStorage* WeaponStorageInst = GetWorld()->SpawnActor<AItemStorage>(WeaponStorageClass);
+      if (!WeaponStorageInst){ return; }
+      if ( !WeaponStorageInst->WeaponMap.Contains(WeaponName) ){ return; }
+      TSubclassOf<AWeapon> WeaponClass = WeaponStorageInst->WeaponMap[WeaponName];
+     
+      AWeapon* Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass);
+      Weapon->Equip(this);
+    }
+  }
+
+
 }
 
 // Called when the game starts or when spawned
