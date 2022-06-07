@@ -93,6 +93,8 @@ AMain::AMain()
   bMovingForward = false;
   bMovingRight = false;
 
+  bESCDown = false;
+
   
 
 }
@@ -283,6 +285,18 @@ void AMain::Jump()
     UE_LOG(LogTemp, Warning, TEXT("AMain: Jump MovementStatus != EMovementStatus::EMS_Dead"));
     Super::Jump();
   }
+}
+
+void AMain::ESCDown()
+{
+  bESCDown = true;
+  if (!MainPlayerController){return;}
+  MainPlayerController->TogglePauseMenu();
+}
+
+void AMain::ESCUp()
+{
+  bESCDown = false;
 }
 
 void AMain::IncrementCoins(int32 Amount)
@@ -501,6 +515,10 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
   PlayerInputComponent->BindAction("LMB", IE_Pressed, this, &AMain::LMBDown);
   PlayerInputComponent->BindAction("LMB", IE_Released, this, &AMain::LMBUp);
+
+  PlayerInputComponent->BindAction("ESC", IE_Pressed, this, &AMain::ESCDown);
+  PlayerInputComponent->BindAction("ESC", IE_Released, this, &AMain::ESCUp);
+
 
 }
 

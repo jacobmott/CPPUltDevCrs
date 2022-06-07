@@ -264,5 +264,10 @@ public:
 
   virtual void Jump() override;
 
+  bool bESCDown;
+  void ESCDown();
+  void ESCUp();
+
+
 
 };
