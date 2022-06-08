@@ -240,6 +240,11 @@ public:
   bool bMovingForward;
   bool bMovingRight;
 
+  bool CanMove(float Value);
+
+  void Turn(float Value);
+  void Lookup(float Value);
+
   /* Called via input to turn at a specific rate
   *  @param Rate This is a normalized rate, i.e. 1.0 means 100% of desired turn rate  
   */

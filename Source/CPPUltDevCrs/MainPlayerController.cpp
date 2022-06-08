@@ -29,13 +29,21 @@ void AMainPlayerController::DisplayPauseMenu_Implementation()
   if (!PauseMenu) { return; }
   PauseMenu->SetVisibility(ESlateVisibility::Visible);
   bPauseMenuVisible = true;
+  FInputModeGameAndUI InputModeGameAndUI;
+  SetInputMode(InputModeGameAndUI);
+  bShowMouseCursor = true;
 }
 
 void AMainPlayerController::RemovePauseMenu_Implementation()
 {
   if (!PauseMenu) { return; }
-  PauseMenu->SetVisibility(ESlateVisibility::Hidden);
+  //We do this in the blueprint
+  //PauseMenu->SetVisibility(ESlateVisibility::Hidden);
   bPauseMenuVisible = false;
+  FInputModeGameOnly InputModeGameOnly;
+  SetInputMode(InputModeGameOnly);
+  bShowMouseCursor = false;
+
 }
 
 void AMainPlayerController::TogglePauseMenu()

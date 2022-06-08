@@ -94,7 +94,6 @@ AMain::AMain()
   bMovingRight = false;
 
   bESCDown = false;
-
   
 
 }
@@ -163,8 +162,6 @@ FRotator AMain::GetLookAtRotationYaw(FVector Target)
 void AMain::SetMovementStatus(EMovementStatus Status)
 {
 
-
-
   MovementStatus = Status;
   if (MovementStatus == EMovementStatus::EMS_Sprinting) {
     GetCharacterMovement()->MaxWalkSpeed = SprintingSpeed;
@@ -197,7 +194,7 @@ void AMain::Attack()
   if (AnimInstance && CombatMontage) {
     int32 Section = FMath::RandRange(0,1);
     switch (Section)
-    { 
+    {
     case 0:
       AnimInstance->Montage_Play(CombatMontage, 2.2f);
       AnimInstance->Montage_JumpToSection(FName("Attack_1"), CombatMontage);
@@ -281,6 +278,9 @@ void AMain::DeathEnd()
 void AMain::Jump()
 {
   UE_LOG(LogTemp, Warning, TEXT("AMain: Jump"));
+  if (MainPlayerController) {
+    if (MainPlayerController->bPauseMenuVisible) { return; }
+  }
   if (MovementStatus != EMovementStatus::EMS_Dead) {
     UE_LOG(LogTemp, Warning, TEXT("AMain: Jump MovementStatus != EMovementStatus::EMS_Dead"));
     Super::Jump();
@@ -384,6 +384,9 @@ void AMain::LoadGame(bool SetPosition)
     SetActorRotation(LoadGameInstance->CharacterStats.Rotation);
   }
 
+
+
+
   FString WeaponName = LoadGameInstance->CharacterStats.WeaponName;
   if ( !WeaponName.Equals(TEXT("")) ) {
     //EquippedWeapon = LoadGameInstance->CharacterStats.WeaponName;
@@ -397,6 +400,10 @@ void AMain::LoadGame(bool SetPosition)
       Weapon->Equip(this);
     }
   }
+
+  SetMovementStatus(EMovementStatus::EMS_Normal);
+  GetMesh()->bPauseAnims = false;
+  GetMesh()->bNoSkeletonUpdate = false;
 
 
 }
@@ -500,8 +507,8 @@ void AMain::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
   PlayerInputComponent->BindAxis("MoveForward", this, &AMain::MoveForward);
   PlayerInputComponent->BindAxis("MoveRight", this, &AMain::MoveRight);
 
-  PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-  PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+  PlayerInputComponent->BindAxis("Turn", this, &AMain::Turn);
+  PlayerInputComponent->BindAxis("LookUp", this, &AMain::Lookup);
 
   PlayerInputComponent->BindAxis("TurnRate", this, &AMain::TurnAtRate);
   PlayerInputComponent->BindAxis("LookUpRate", this, &AMain::LookUpAtRate);
@@ -527,6 +534,12 @@ void AMain::LMBDown()
 {
   bLMBDown = true;
   if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
+
+  if (MainPlayerController) {
+    if (MainPlayerController->bPauseMenuVisible){ return; }
+  }
+
+
   if (ActiveOverlappingItem){ 
     AWeapon* Weapon = Cast<AWeapon>(ActiveOverlappingItem); 
     if (!Weapon){ return; }
@@ -548,14 +561,9 @@ void AMain::LMBUp()
 
 void AMain::MoveForward(float Value)
 {
+
   bMovingForward = false;
-
-  if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
-
-  if (Controller == nullptr  || Value == 0.0f || bAttacking){
-    return;
-  }
-
+  if (!CanMove(Value)) { return; }
   bMovingForward = true;
 
   // Find out which way is forward
@@ -570,13 +578,7 @@ void AMain::MoveForward(float Value)
 void AMain::MoveRight(float Value)
 {
   bMovingRight = false;
-
-  if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
-
-  if (Controller == nullptr || Value == 0.0f || bAttacking) {
-    return;
-  }
-
+  if (!CanMove(Value)){ return; }
   bMovingRight = true;
 
   // Find out which way is forward
@@ -587,6 +589,32 @@ void AMain::MoveRight(float Value)
   AddMovementInput(Direction, Value);
 
 
+}
+
+bool AMain::CanMove(float Value)
+{
+
+  if (MovementStatus == EMovementStatus::EMS_Dead) { return false; }
+
+  if (MainPlayerController == nullptr || Value == 0.0f || bAttacking) {
+    return false;
+  }
+
+  if (MainPlayerController->bPauseMenuVisible){ return false; }
+
+  return true;
+}
+
+void AMain::Turn(float Value)
+{
+  if (!CanMove(Value)) { return; }
+  AddControllerYawInput(Value);
+}
+
+void AMain::Lookup(float Value)
+{
+  if (!CanMove(Value)) { return; }
+  AddControllerPitchInput(Value);
 }
 
 void AMain::TurnAtRate(float Rate)
