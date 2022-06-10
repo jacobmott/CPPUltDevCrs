@@ -27,8 +27,21 @@ public:
     TriggerBox = TriggerBoxComp;
   }
 
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Floor Switch")
+  TObjectPtr<UBoxComponent> TriggerBox2;
+  FORCEINLINE UBoxComponent* GetTriggerBox2() {
+    return TriggerBox2;
+  }
+  FORCEINLINE void SetTriggerBox2(UBoxComponent* TriggerBoxComp) {
+    TriggerBox2 = TriggerBoxComp;
+  }
+
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh")
   TObjectPtr<UStaticMeshComponent> FloorSwitch;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh")
+  TObjectPtr<UStaticMeshComponent> FloorSwitch2;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh")
   TObjectPtr<UStaticMeshComponent> Door;
@@ -39,6 +52,8 @@ public:
   UPROPERTY(BlueprintReadWrite, Category = "Floor Switch")
   FVector InitialSwitchLocation;
 
+  UPROPERTY(BlueprintReadWrite, Category = "Floor Switch")
+  FVector InitialSwitchLocation2;
 
   FTimerHandle SwitchHandle;
 

@@ -40,8 +40,7 @@ void AMainPlayerController::RemovePauseMenu_Implementation()
   //We do this in the blueprint
   //PauseMenu->SetVisibility(ESlateVisibility::Hidden);
   bPauseMenuVisible = false;
-  FInputModeGameOnly InputModeGameOnly;
-  SetInputMode(InputModeGameOnly);
+  GameModeOnly();
   bShowMouseCursor = false;
 
 }
@@ -54,6 +53,12 @@ void AMainPlayerController::TogglePauseMenu()
   else {
     DisplayPauseMenu();
   }
+}
+
+void AMainPlayerController::GameModeOnly()
+{
+  FInputModeGameOnly InputModeGameOnly;
+  SetInputMode(InputModeGameOnly);
 }
 
 void AMainPlayerController::BeginPlay()

@@ -54,7 +54,7 @@ AWeapon::AWeapon()
 void AWeapon::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
   Super::OnOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-  UE_LOG(LogTemp, Warning, TEXT("AWeapon: Overlap Begin"));
+  //UE_LOG(LogTemp, Warning, TEXT("AWeapon: Overlap Begin"));
 
   if ( WeaponState != EWeaponState::EWS_Pickup ){ return; }
   if (!OtherActor){ return; }
@@ -73,7 +73,7 @@ void AWeapon::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AA
 void AWeapon::OnOverlapEnd(class UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
   Super::OnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
-  UE_LOG(LogTemp, Warning, TEXT("AWeapon: Overlap End"));
+  //UE_LOG(LogTemp, Warning, TEXT("AWeapon: Overlap End"));
 
   if (!OtherActor) { return; }
 

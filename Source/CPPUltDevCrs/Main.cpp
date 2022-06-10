@@ -253,14 +253,14 @@ void AMain::DecrementHealth(float Amount)
 
 void AMain::Die()
 {
-  UE_LOG(LogTemp, Warning, TEXT("AMain: Die"));
+  //UE_LOG(LogTemp, Warning, TEXT("AMain: Die"));
   if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
   UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
   if (AnimInstance && CombatMontage) {
     AnimInstance->Montage_Play(CombatMontage, 1.0f);
     AnimInstance->Montage_JumpToSection(FName("Death"), CombatMontage);
   }
-  UE_LOG(LogTemp, Warning, TEXT("AMain: Die SetMovementStatus(EMovementStatus::EMS_Dead)"));
+  //UE_LOG(LogTemp, Warning, TEXT("AMain: Die SetMovementStatus(EMovementStatus::EMS_Dead)"));
   SetMovementStatus(EMovementStatus::EMS_Dead);
   
   //DeathEnd();
@@ -269,7 +269,7 @@ void AMain::Die()
 void AMain::DeathEnd()
 {
 
-  UE_LOG(LogTemp, Warning, TEXT("AMain: DeathEnd"));
+  //UE_LOG(LogTemp, Warning, TEXT("AMain: DeathEnd"));
   GetMesh()->bPauseAnims = true;
   GetMesh()->bNoSkeletonUpdate = true;
 }
@@ -277,12 +277,12 @@ void AMain::DeathEnd()
 
 void AMain::Jump()
 {
-  UE_LOG(LogTemp, Warning, TEXT("AMain: Jump"));
+  //UE_LOG(LogTemp, Warning, TEXT("AMain: Jump"));
   if (MainPlayerController) {
     if (MainPlayerController->bPauseMenuVisible) { return; }
   }
   if (MovementStatus != EMovementStatus::EMS_Dead) {
-    UE_LOG(LogTemp, Warning, TEXT("AMain: Jump MovementStatus != EMovementStatus::EMS_Dead"));
+    //UE_LOG(LogTemp, Warning, TEXT("AMain: Jump MovementStatus != EMovementStatus::EMS_Dead"));
     Super::Jump();
   }
 }
@@ -328,35 +328,63 @@ float AMain::TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEven
   return DamageAmout;
 }
 
-void AMain::SwitchLevel(FName LevelName)
+void AMain::SwitchLevel(FName LevelName, bool AutoSave, bool bSavePosition)
 {
+  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel1:"));
   UWorld* World = GetWorld();
-  if (!World){ return; }
-
+  if (!World) { return; }
+  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel2:"));
   FString CurrentLevel = World->GetMapName();
-
+  CurrentLevel.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+  FString CurrLevelName = LevelName.ToString();
+  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel3:"));
   FName CurrentLevelName(*CurrentLevel);
-  if (CurrentLevelName == LevelName) { return; }
-
+  FString MapName = LevelName.ToString();
+  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel: LevelName: %s"), *MapName);
+  if (CurrentLevel.Equals(CurrLevelName)) { return; }
+  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel4:"));
+  if (AutoSave) {
+    UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel5:"));
+    SaveGame(LevelName, bSavePosition);
+    //AutoSaveDelegate.BindUFunction(this, FName("SaveGame"), LevelName, true);
+    //GetWorldTimerManager().SetTimer(AutoSaveHandle, AutoSaveDelegate, 10.0f,false, 5.0f);
+  }
+  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel6:"));
   //if ( CurrentLevel.Equals(LevelName.ToString()) ){ return; }
   
   UGameplayStatics::OpenLevel(World, LevelName);
-  
-
 
 }
 
-void AMain::SaveGame()
+void AMain::SaveGame(FName LevelName, bool bSavePosition)
 {
   UFirstSaveGame* SaveGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::CreateSaveGameObject(UFirstSaveGame::StaticClass()));
-  
+  FDebug::DumpStackTraceToLog(ELogVerbosity::All);
   SaveGameInstance->CharacterStats.Health = Health;
   SaveGameInstance->CharacterStats.MaxHealth = MaxHealth;
   SaveGameInstance->CharacterStats.Stamina = Stamina;
   SaveGameInstance->CharacterStats.MaxStamina = MaxStamina;
   SaveGameInstance->CharacterStats.Coins = Coins;
-  SaveGameInstance->CharacterStats.Location = GetActorLocation();
-  SaveGameInstance->CharacterStats.Rotation = GetActorRotation();
+  //We dont save our position when we transition through a portal, it will be wrong
+  if (bSavePosition && !bTransitioningFromLevelPortal){
+    SaveGameInstance->CharacterStats.Location = GetActorLocation();
+    SaveGameInstance->CharacterStats.Rotation = GetActorRotation();
+  }
+
+  SaveGameInstance->CharacterStats.TransitioningFromLevelPortal = bTransitioningFromLevelPortal;
+
+  FString MapName = LevelName.ToString();
+  UE_LOG(LogTemp, Warning, TEXT("AMain: SaveGame: MapNameLength: %d"),MapName.Len());
+  if (MapName.Equals("None")){
+    FString ThisMapName = GetWorld()->GetMapName();
+    ThisMapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+    MapName = ThisMapName;
+    UE_LOG(LogTemp, Warning, TEXT("AMain: SaveGame: ThisMapName: %s"), *ThisMapName);
+  }
+  UE_LOG(LogTemp, Warning, TEXT("AMain: SaveGame: MapName: %s"), *MapName);
+
+  SaveGameInstance->CharacterStats.LevelName = MapName;
+
 
   if (EquippedWeapon){
     SaveGameInstance->CharacterStats.WeaponName = EquippedWeapon->Name;
@@ -369,51 +397,132 @@ void AMain::SaveGame()
 
 void AMain::LoadGame(bool SetPosition)
 {
+  //LoadGameNoSwitch();
+
+  UFirstSaveGame* LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::CreateSaveGameObject(UFirstSaveGame::StaticClass()));
+  LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->PlayerName, LoadGameInstance->UserIndex));
+  if (!LoadGameInstance) { return; }
+
+  FString FSLevelName = LoadGameInstance->CharacterStats.LevelName;
+  FString Temp = GetWorld()->GetMapName();
+  Temp.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame,Temp %s"), *Temp);
+  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame,FSLevelName %s"), *FSLevelName);
+  if ( !FSLevelName.Equals("") && !FSLevelName.Equals(Temp) ) {
+    FName FNLevelName = FName(*FSLevelName);
+    UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, calling switch level"));
+    SwitchLevel(FNLevelName, false, false);
+  }
+  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, loading health and such"));
+  Health = LoadGameInstance->CharacterStats.Health;
+  MaxHealth = LoadGameInstance->CharacterStats.MaxHealth;
+  Stamina = LoadGameInstance->CharacterStats.Stamina;
+  MaxStamina = LoadGameInstance->CharacterStats.MaxStamina;
+  Coins = LoadGameInstance->CharacterStats.Coins;
+  bTransitioningFromLevelPortal = LoadGameInstance->CharacterStats.TransitioningFromLevelPortal;
+
+  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here2"));
+  FString WeaponName = LoadGameInstance->CharacterStats.WeaponName;
+  if (!WeaponName.Equals(TEXT(""))) {
+    //EquippedWeapon = LoadGameInstance->CharacterStats.WeaponName;
+    if (WeaponStorageClass) {
+      AItemStorage* WeaponStorageInst = GetWorld()->SpawnActor<AItemStorage>(WeaponStorageClass);
+      if (!WeaponStorageInst) { return; }
+      if (!WeaponStorageInst->WeaponMap.Contains(WeaponName)) { return; }
+      TSubclassOf<AWeapon> WeaponClass = WeaponStorageInst->WeaponMap[WeaponName];
+
+      AWeapon* Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass);
+      Weapon->Equip(this);
+    }
+  }
+  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here3"));
+  if (SetPosition){
+    UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here4"));
+    SetActorLocation(LoadGameInstance->CharacterStats.Location);
+    SetActorRotation(LoadGameInstance->CharacterStats.Rotation);
+    UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here5"));
+  }
+  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here6"));
+  
+
+  SetMovementStatus(EMovementStatus::EMS_Normal);
+  GetMesh()->bPauseAnims = false;
+  GetMesh()->bNoSkeletonUpdate = false;
+  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here7"));
+}
+
+void AMain::LoadGameNoSwitch(bool SetPosition)
+{
   UFirstSaveGame* LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::CreateSaveGameObject(UFirstSaveGame::StaticClass()));
 
-  LoadGameInstance  = Cast<UFirstSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->PlayerName, LoadGameInstance->UserIndex));
+  LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->PlayerName, LoadGameInstance->UserIndex));
+  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGameNoSwitch, CALLED HERE1"));
+  if (!LoadGameInstance) { return; }
 
   Health = LoadGameInstance->CharacterStats.Health;
   MaxHealth = LoadGameInstance->CharacterStats.MaxHealth;
   Stamina = LoadGameInstance->CharacterStats.Stamina;
   MaxStamina = LoadGameInstance->CharacterStats.MaxStamina;
   Coins = LoadGameInstance->CharacterStats.Coins;
-
-  if (SetPosition){
-    SetActorLocation(LoadGameInstance->CharacterStats.Location);
-    SetActorRotation(LoadGameInstance->CharacterStats.Rotation);
-  }
-
-
-
+  bTransitioningFromLevelPortal = LoadGameInstance->CharacterStats.TransitioningFromLevelPortal;
 
   FString WeaponName = LoadGameInstance->CharacterStats.WeaponName;
-  if ( !WeaponName.Equals(TEXT("")) ) {
+  if (!WeaponName.Equals(TEXT(""))) {
     //EquippedWeapon = LoadGameInstance->CharacterStats.WeaponName;
-    if (WeaponStorageClass){
+    if (WeaponStorageClass) {
       AItemStorage* WeaponStorageInst = GetWorld()->SpawnActor<AItemStorage>(WeaponStorageClass);
-      if (!WeaponStorageInst){ return; }
-      if ( !WeaponStorageInst->WeaponMap.Contains(WeaponName) ){ return; }
+      if (!WeaponStorageInst) { return; }
+      if (!WeaponStorageInst->WeaponMap.Contains(WeaponName)) { return; }
       TSubclassOf<AWeapon> WeaponClass = WeaponStorageInst->WeaponMap[WeaponName];
-     
+
       AWeapon* Weapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass);
       Weapon->Equip(this);
     }
   }
-
+  if (SetPosition) {
+    UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here4"));
+    SetActorLocation(LoadGameInstance->CharacterStats.Location);
+    SetActorRotation(LoadGameInstance->CharacterStats.Rotation);
+    UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here5"));
+  }
   SetMovementStatus(EMovementStatus::EMS_Normal);
   GetMesh()->bPauseAnims = false;
   GetMesh()->bNoSkeletonUpdate = false;
-
 
 }
 
 // Called when the game starts or when spawned
 void AMain::BeginPlay()
 {
+  UE_LOG(LogTemp, Warning, TEXT("AMain: BeginPlay1"));
 	Super::BeginPlay();
   MainPlayerController = Cast<AMainPlayerController>(GetController());
-  
+
+
+  FString MapName = GetWorld()->GetMapName();
+  MapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+  FName MyMapName(MapName);
+  if (!MapName.Equals("SunTemple")) {
+    UE_LOG(LogTemp, Warning, TEXT("AMain: BeginPlay2"));
+    //If your not transition through a portal then use the saved position when you load game
+    //TODO WORK ON THIS
+    //bool UsePosition = !bTransitioningFromLevelPortal;
+    LoadGameNoSwitch(bTransitioningFromLevelPortal);
+    UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel55:"));
+    //AutoSaveDelegate = FTimerDelegate::CreateUObject(this, &AMain::SaveGame, MyMapName, true);
+    //AutoSaveDelegate.BindUFunction(this, FName("SaveGame"), LevelName, true);
+    //GetWorldTimerManager().SetTimer(AutoSaveHandle, AutoSaveDelegate, 10.0f, false, 5.0f);
+    if (bTransitioningFromLevelPortal){
+      UE_LOG(LogTemp, Warning, TEXT("AMain: BeginPlay1 bTransitioningFromLevelPortal!"));
+      //done transitioning, dont save this again as true yet
+      bTransitioningFromLevelPortal = false;
+      SaveGame(MyMapName, true);
+    }
+  }
+  UE_LOG(LogTemp, Warning, TEXT("AMain: BeginPlay3"));
+  if (MainPlayerController) {
+    MainPlayerController->GameModeOnly();
+  }
 }
 
 // Called every frame
@@ -421,6 +530,21 @@ void AMain::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
   if (MovementStatus == EMovementStatus::EMS_Dead) { return; }
+
+
+  if (bInterpToEnemy && CombatTarget) {
+    FRotator LookAtYaw = GetLookAtRotationYaw(CombatTarget->GetActorLocation());
+    FRotator InterpRotation = FMath::RInterpTo(GetActorRotation(), LookAtYaw, DeltaTime, InterpSpeed); \
+      SetActorRotation(InterpRotation);
+  }
+
+  if (CombatTarget) {
+    CombatTargetLocation = CombatTarget->GetActorLocation();
+    if (MainPlayerController) {
+      MainPlayerController->EnemyLocation = CombatTargetLocation;
+    }
+  }
+
 
   float DeltaStamina = StaminaDrainRate * DeltaTime;
 
@@ -435,11 +559,11 @@ void AMain::Tick(float DeltaTime)
       SetMovementStatus(EMovementStatus::EMS_Normal);
       break;
     }
+    if (!bMovingForward && !bMovingRight) { break; }
     Stamina -= DeltaStamina;
     if (Stamina <= MinSprintStamina){ 
       SetStaminaStatus(EStaminaStatus::ESS_BelowMinimum);
     }
-    if (!bMovingForward || !bMovingRight) { break; }
     SetMovementStatus(EMovementStatus::EMS_Sprinting);
     break;
   case EStaminaStatus::ESS_BelowMinimum:
@@ -451,13 +575,13 @@ void AMain::Tick(float DeltaTime)
       SetMovementStatus(EMovementStatus::EMS_Normal);
       break;
     }
+    if (!bMovingForward && !bMovingRight) { break; }
     Stamina -= DeltaStamina;
     if (Stamina <= 0.0f) {
       SetStaminaStatus(EStaminaStatus::ESS_Exhausted);
       Stamina = 0.0f;
       SetMovementStatus(EMovementStatus::EMS_Normal);
     }
-    if (!bMovingForward || !bMovingRight) { break; }
     SetMovementStatus(EMovementStatus::EMS_Sprinting);
     break;
   case EStaminaStatus::ESS_Exhausted:
@@ -483,18 +607,7 @@ void AMain::Tick(float DeltaTime)
   }
 
 
-  if (bInterpToEnemy && CombatTarget) {
-    FRotator LookAtYaw = GetLookAtRotationYaw(CombatTarget->GetActorLocation());
-    FRotator InterpRotation = FMath::RInterpTo(GetActorRotation(), LookAtYaw, DeltaTime, InterpSpeed);\
-    SetActorRotation(InterpRotation);
-  }
 
-  if (CombatTarget) {
-    CombatTargetLocation = CombatTarget->GetActorLocation();
-    if (MainPlayerController){
-      MainPlayerController->EnemyLocation = CombatTargetLocation;
-    }
-  }
 
 
 }

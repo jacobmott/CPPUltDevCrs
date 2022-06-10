@@ -211,16 +211,24 @@ public:
   virtual float TakeDamage(float DamageAmout, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 
-  void SwitchLevel(FName LevelName);
+  void SwitchLevel(FName LevelName, bool AutoSave, bool bSavePosition);
 
   UFUNCTION(BlueprintCallable)
-  void SaveGame();
+  void SaveGame(FName LevelName, bool bSavePosition);
   UFUNCTION(BlueprintCallable)
   void LoadGame(bool SetPosition);
+
+
+  void LoadGameNoSwitch(bool SetPosition);
 
   UPROPERTY(EditDefaultsOnly, Category = "SaveData")
   TSubclassOf<AItemStorage> WeaponStorageClass;
   
+  FTimerHandle AutoSaveHandle;
+  FTimerDelegate AutoSaveDelegate;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerStats")
+  bool bTransitioningFromLevelPortal;
 
 protected:
 	// Called when the game starts or when spawned

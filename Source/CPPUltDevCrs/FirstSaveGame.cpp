@@ -11,4 +11,8 @@ UFirstSaveGame::UFirstSaveGame()
 
   CharacterStats.WeaponName = TEXT("");
 
+  CharacterStats.LevelName = TEXT("");
+ 
+  CharacterStats.TransitioningFromLevelPortal = false;
+
 }

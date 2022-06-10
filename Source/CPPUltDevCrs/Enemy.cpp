@@ -117,7 +117,7 @@ void AEnemy::Die(AActor* Causer)
 
 void AEnemy::DeathEnd()
 {
-  UE_LOG(LogTemp, Warning, TEXT("AEnemy: DeathEnd"));
+  //UE_LOG(LogTemp, Warning, TEXT("AEnemy: DeathEnd"));
   GetMesh()->bPauseAnims = true;
   GetMesh()->bNoSkeletonUpdate = true;
   GetWorldTimerManager().SetTimer(DeathTimer, this, &AEnemy::Dissappear, DeathDelay);
@@ -174,7 +174,7 @@ void AEnemy::AgroSphereOnOverlapBegin(class UPrimitiveComponent* OverlappedComp,
   if (!OtherActor){ return; }
   if (OtherActor == this){ return; }
 
-  UE_LOG(LogTemp, Warning, TEXT("AEnemy: AgroSphereOnOverlapBegin"));
+  //UE_LOG(LogTemp, Warning, TEXT("AEnemy: AgroSphereOnOverlapBegin"));
 
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main) { return; }
@@ -202,7 +202,7 @@ void AEnemy::AgroSphereOnOverlapEnd(class UPrimitiveComponent* OverlappedCompone
   if (!Alive()) { return; }
   if (!OtherActor) { return; }
   if (!AIController) { return; }
-  UE_LOG(LogTemp, Warning, TEXT("AEnemy: AgroSphereOnOverlapEnd"));
+  //UE_LOG(LogTemp, Warning, TEXT("AEnemy: AgroSphereOnOverlapEnd"));
 
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main) { return; }
@@ -232,7 +232,7 @@ void AEnemy::CombatSphereOnOverlapBegin(class UPrimitiveComponent* OverlappedCom
   if (!OtherActor) { return; }
   if (OtherActor == this) { return; }
 
-  UE_LOG(LogTemp, Warning, TEXT("AEnemy: CombatSphereOnOverlapBegin"));
+  //UE_LOG(LogTemp, Warning, TEXT("AEnemy: CombatSphereOnOverlapBegin"));
 
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main) { return; }
@@ -269,7 +269,7 @@ void AEnemy::CombatSphereOnOverlapEnd(class UPrimitiveComponent* OverlappedCompo
   if (OtherActor == this) { return; }
   if (!OtherComp){ return; }
 
-  UE_LOG(LogTemp, Warning, TEXT("AEnemy: CombatSphereOnOverlapEnd"));
+  //UE_LOG(LogTemp, Warning, TEXT("AEnemy: CombatSphereOnOverlapEnd"));
 
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main) { return; }

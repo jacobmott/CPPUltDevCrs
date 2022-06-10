@@ -52,7 +52,6 @@ public:
   void RemoveEnemyHealthBar();
 
 
-
   bool bPauseMenuVisible;
 
   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "HUD")
@@ -64,6 +63,8 @@ public:
 
   //UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets")
   FVector EnemyLocation;
+
+  void GameModeOnly();
 
 protected:
 
