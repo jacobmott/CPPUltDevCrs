@@ -409,21 +409,6 @@ void AMain::LoadGame(bool SetPosition)
     SwitchLevel(FNLevelName, false, false);
   }
 
-  UFirstSaveGame* LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::CreateSaveGameObject(UFirstSaveGame::StaticClass()));
-  LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->PlayerName, LoadGameInstance->UserIndex));
-  if (!LoadGameInstance) { return; }
-
-  FString FSLevelName = LoadGameInstance->CharacterStats.LevelName;
-  FString Temp = GetWorld()->GetMapName();
-  Temp.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
-  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame,Temp %s"), *Temp);
-  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame,FSLevelName %s"), *FSLevelName);
-  if ( !FSLevelName.Equals("") && !FSLevelName.Equals(Temp) ) {
-    FName FNLevelName = FName(*FSLevelName);
-    UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, calling switch level"));
-    SwitchLevel(FNLevelName, false, false);
-  }
-  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, loading health and such"));
   Health = LoadGameInstance->CharacterStats.Health;
   MaxHealth = LoadGameInstance->CharacterStats.MaxHealth;
   Stamina = LoadGameInstance->CharacterStats.Stamina;

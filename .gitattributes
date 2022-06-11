@@ -14,6 +14,9 @@
 *.jpg filter=lfs diff=lfs merge=lfs -text
 
 
+# Raw Content types
+*.7z filter=lfs diff=lfs merge=lfs -text
+
 # World Machine Builder files:
 *.r16 filter=lfs diff=lfs merge=lfs -text
 *.tmd filter=lfs diff=lfs merge=lfs -text
