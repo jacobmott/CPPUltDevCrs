@@ -333,23 +333,21 @@ void AMain::SwitchLevel(FName LevelName, bool AutoSave, bool bSavePosition)
   UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel1:"));
   UWorld* World = GetWorld();
   if (!World) { return; }
-  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel2:"));
+
   FString CurrentLevel = World->GetMapName();
   CurrentLevel.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
   FString CurrLevelName = LevelName.ToString();
-  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel3:"));
+
   FName CurrentLevelName(*CurrentLevel);
   FString MapName = LevelName.ToString();
-  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel: LevelName: %s"), *MapName);
+
   if (CurrentLevel.Equals(CurrLevelName)) { return; }
-  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel4:"));
+
   if (AutoSave) {
-    UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel5:"));
     SaveGame(LevelName, bSavePosition);
     //AutoSaveDelegate.BindUFunction(this, FName("SaveGame"), LevelName, true);
     //GetWorldTimerManager().SetTimer(AutoSaveHandle, AutoSaveDelegate, 10.0f,false, 5.0f);
   }
-  UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel6:"));
   //if ( CurrentLevel.Equals(LevelName.ToString()) ){ return; }
   
   UGameplayStatics::OpenLevel(World, LevelName);
@@ -374,14 +372,13 @@ void AMain::SaveGame(FName LevelName, bool bSavePosition)
   SaveGameInstance->CharacterStats.TransitioningFromLevelPortal = bTransitioningFromLevelPortal;
 
   FString MapName = LevelName.ToString();
-  UE_LOG(LogTemp, Warning, TEXT("AMain: SaveGame: MapNameLength: %d"),MapName.Len());
   if (MapName.Equals("None")){
     FString ThisMapName = GetWorld()->GetMapName();
     ThisMapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
     MapName = ThisMapName;
-    UE_LOG(LogTemp, Warning, TEXT("AMain: SaveGame: ThisMapName: %s"), *ThisMapName);
+
   }
-  UE_LOG(LogTemp, Warning, TEXT("AMain: SaveGame: MapName: %s"), *MapName);
+
 
   SaveGameInstance->CharacterStats.LevelName = MapName;
 
@@ -406,6 +403,19 @@ void AMain::LoadGame(bool SetPosition)
   FString FSLevelName = LoadGameInstance->CharacterStats.LevelName;
   FString Temp = GetWorld()->GetMapName();
   Temp.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+
+  if ( !FSLevelName.Equals("") && !FSLevelName.Equals(Temp) ) {
+    FName FNLevelName = FName(*FSLevelName);
+    SwitchLevel(FNLevelName, false, false);
+  }
+
+  UFirstSaveGame* LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::CreateSaveGameObject(UFirstSaveGame::StaticClass()));
+  LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->PlayerName, LoadGameInstance->UserIndex));
+  if (!LoadGameInstance) { return; }
+
+  FString FSLevelName = LoadGameInstance->CharacterStats.LevelName;
+  FString Temp = GetWorld()->GetMapName();
+  Temp.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
   UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame,Temp %s"), *Temp);
   UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame,FSLevelName %s"), *FSLevelName);
   if ( !FSLevelName.Equals("") && !FSLevelName.Equals(Temp) ) {
@@ -421,7 +431,6 @@ void AMain::LoadGame(bool SetPosition)
   Coins = LoadGameInstance->CharacterStats.Coins;
   bTransitioningFromLevelPortal = LoadGameInstance->CharacterStats.TransitioningFromLevelPortal;
 
-  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here2"));
   FString WeaponName = LoadGameInstance->CharacterStats.WeaponName;
   if (!WeaponName.Equals(TEXT(""))) {
     //EquippedWeapon = LoadGameInstance->CharacterStats.WeaponName;
@@ -435,20 +444,15 @@ void AMain::LoadGame(bool SetPosition)
       Weapon->Equip(this);
     }
   }
-  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here3"));
   if (SetPosition){
     UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here4"));
     SetActorLocation(LoadGameInstance->CharacterStats.Location);
     SetActorRotation(LoadGameInstance->CharacterStats.Rotation);
-    UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here5"));
-  }
-  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here6"));
-  
+  }  
 
   SetMovementStatus(EMovementStatus::EMS_Normal);
   GetMesh()->bPauseAnims = false;
   GetMesh()->bNoSkeletonUpdate = false;
-  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here7"));
 }
 
 void AMain::LoadGameNoSwitch(bool SetPosition)
@@ -456,7 +460,6 @@ void AMain::LoadGameNoSwitch(bool SetPosition)
   UFirstSaveGame* LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::CreateSaveGameObject(UFirstSaveGame::StaticClass()));
 
   LoadGameInstance = Cast<UFirstSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->PlayerName, LoadGameInstance->UserIndex));
-  UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGameNoSwitch, CALLED HERE1"));
   if (!LoadGameInstance) { return; }
 
   Health = LoadGameInstance->CharacterStats.Health;
@@ -480,10 +483,8 @@ void AMain::LoadGameNoSwitch(bool SetPosition)
     }
   }
   if (SetPosition) {
-    UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here4"));
     SetActorLocation(LoadGameInstance->CharacterStats.Location);
     SetActorRotation(LoadGameInstance->CharacterStats.Rotation);
-    UE_LOG(LogTemp, Warning, TEXT("AMain: LoadGame, after switch level, here5"));
   }
   SetMovementStatus(EMovementStatus::EMS_Normal);
   GetMesh()->bPauseAnims = false;
@@ -503,23 +504,19 @@ void AMain::BeginPlay()
   MapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
   FName MyMapName(MapName);
   if (!MapName.Equals("SunTemple")) {
-    UE_LOG(LogTemp, Warning, TEXT("AMain: BeginPlay2"));
     //If your not transition through a portal then use the saved position when you load game
     //TODO WORK ON THIS
     //bool UsePosition = !bTransitioningFromLevelPortal;
     LoadGameNoSwitch(bTransitioningFromLevelPortal);
-    UE_LOG(LogTemp, Warning, TEXT("AMain: SwitchLevel55:"));
     //AutoSaveDelegate = FTimerDelegate::CreateUObject(this, &AMain::SaveGame, MyMapName, true);
     //AutoSaveDelegate.BindUFunction(this, FName("SaveGame"), LevelName, true);
     //GetWorldTimerManager().SetTimer(AutoSaveHandle, AutoSaveDelegate, 10.0f, false, 5.0f);
     if (bTransitioningFromLevelPortal){
-      UE_LOG(LogTemp, Warning, TEXT("AMain: BeginPlay1 bTransitioningFromLevelPortal!"));
       //done transitioning, dont save this again as true yet
       bTransitioningFromLevelPortal = false;
       SaveGame(MyMapName, true);
     }
   }
-  UE_LOG(LogTemp, Warning, TEXT("AMain: BeginPlay3"));
   if (MainPlayerController) {
     MainPlayerController->GameModeOnly();
   }

@@ -46,7 +46,6 @@ void ALevelTransitionVolume::OnOverlapBegin(class UPrimitiveComponent* Overlappe
 {
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main){ return; }
-  UE_LOG(LogTemp, Warning, TEXT("ALevelTransitionVolume1: OnOverlapBegin, calling switch level"));
   Main->bTransitioningFromLevelPortal = true;
   Main->SwitchLevel(TransitionLevelName, true, false);
 
@@ -56,7 +55,6 @@ void ALevelTransitionVolume::OnOverlapEnd(class UPrimitiveComponent* OverlappedC
 {
   AMain* Main = Cast<AMain>(OtherActor);
   if (!Main) { return; }
-  UE_LOG(LogTemp, Warning, TEXT("ALevelTransitionVolume: OnOverlapEnd, calling switch level"));
 
 }
 
